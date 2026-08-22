@@ -1,0 +1,2113 @@
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Passport Solitaire — World Tour</title>
+
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+
+
+
+*{box-sizing:border-box;margin:0;padding:0;user-select:none}
+
+:root{
+
+  --bg:#0b0818;
+
+  --surface:#13102a;
+
+  --surface2:#1a1535;
+
+  --border:#2e2650;
+
+  --accent:#7de8d4;
+
+  --pink:#ff6ec7;
+
+  --gold:#ffc857;
+
+  --purple:#a78bfa;
+
+  --blue:#7b9dff;
+
+  --orange:#f97316;
+
+  --green:#34d399;
+
+  --text:#e8e6f0;
+
+  --muted:#9d95c9;
+
+  --card-w:72px;
+
+  --card-h:100px;
+
+  --card-radius:7px;
+
+}
+
+
+
+
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;min-height:100vh;overflow-x:hidden}
+
+
+
+
+/* ── SCREENS ── */
+
+.screen{display:none;min-height:100vh}
+
+.screen.active{display:flex;flex-direction:column}
+
+
+
+
+/* ── DESTINATION PICKER ── */
+
+#screen-pick{background:var(--bg);padding:20px}
+
+.pick-header{text-align:center;padding:20px 0 24px}
+
+.pick-header .logo{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--accent);margin-bottom:8px}
+
+.pick-header h1{font-size:28px;font-weight:700;letter-spacing:-0.5px}
+
+.pick-header p{color:var(--muted);font-size:14px;margin-top:4px}
+
+
+
+
+.region-tabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:20px}
+
+.rtab{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-family:'Space Mono',monospace;cursor:pointer;color:var(--muted);transition:all 0.15s;font-weight:700;letter-spacing:1px}
+
+.rtab:hover{color:var(--text);border-color:var(--muted)}
+
+.rtab.active{color:#fff;border-color:currentColor}
+
+
+
+
+.dest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-width:900px;margin:0 auto;width:100%}
+
+.dest-card{background:var(--surface);border:1px dashed var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:all 0.15s;position:relative}
+
+.dest-card.unlocked{border-style:solid}
+
+.dest-card.stamped{border-style:solid}
+
+.dest-card:hover.unlocked{transform:translateY(-2px)}
+
+.dest-card:hover.stamped{transform:translateY(-2px)}
+
+.dest-card .dest-icon{font-size:20px;margin-bottom:4px}
+
+.dest-card .dest-name{font-size:11px;font-weight:600;line-height:1.3}
+
+.dest-card .dest-diff{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:1px;margin-top:3px;opacity:0.7}
+
+.dest-card.locked{opacity:0.35;cursor:not-allowed}
+
+.dest-card .stamp-badge{position:absolute;top:4px;right:4px;font-size:9px;line-height:1}
+
+
+
+
+.pick-footer{text-align:center;padding:16px;color:var(--muted);font-size:12px;font-family:'Space Mono',monospace}
+
+
+
+
+/* ── GAME ── */
+
+#screen-game{background:var(--bg)}
+
+.game-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+
+.game-bar .dest-info{display:flex;align-items:center;gap:8px;flex:1}
+
+.game-bar .dest-info .dest-flag{font-size:20px}
+
+.game-bar .dest-info .dest-label{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px}
+
+.game-bar .dest-info .dest-title{font-size:15px;font-weight:600}
+
+.game-bar .stats{display:flex;gap:16px;font-family:'Space Mono',monospace;font-size:13px}
+
+.game-bar .stat-val{font-weight:700;color:var(--accent)}
+
+.game-bar .stat-label{font-size:10px;color:var(--muted);margin-top:1px}
+
+.btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;padding:7px 14px;cursor:pointer;transition:all 0.15s}
+
+.btn:hover{border-color:var(--muted);background:var(--surface)}
+
+.btn.accent{border-color:var(--accent);color:var(--accent)}
+
+.btn.accent:hover{background:rgba(125,232,212,0.1)}
+
+.btn.sm{padding:5px 10px;font-size:12px}
+
+
+
+
+/* difficulty pills */
+
+.diff-pills{display:flex;gap:6px;align-items:center}
+
+.dpill{border-radius:12px;padding:4px 10px;font-size:11px;font-family:'Space Mono',monospace;font-weight:700;cursor:pointer;border:1px solid transparent;transition:all 0.12s}
+
+.dpill.easy{color:#34d399;border-color:rgba(52,211,153,0.3)}
+
+.dpill.medium{color:#ffc857;border-color:rgba(255,200,87,0.3)}
+
+.dpill.hard{color:#ff6ec7;border-color:rgba(255,110,199,0.3)}
+
+.dpill.active{background:rgba(255,255,255,0.07)}
+
+
+
+
+/* ── CARD TABLE ── */
+
+.table-area{flex:1;padding:16px 16px;overflow:auto;position:relative;background:radial-gradient(ellipse at 50% 30%,#12342a 0%,#0a2018 45%,#061410 100%);min-height:0}
+
+.table-watermark{position:fixed;bottom:20px;right:20px;font-size:160px;opacity:0.06;pointer-events:none;line-height:1;z-index:0;transition:opacity 0.5s;filter:drop-shadow(0 0 40px rgba(125,232,212,0.15))}
+
+.foundations-row{display:flex;gap:8px;justify-content:flex-end;margin-bottom:12px;position:relative;z-index:1}
+
+.tableau-row{display:flex;gap:8px;justify-content:center;position:relative;z-index:1}
+
+.stock-waste{display:flex;gap:8px;margin-bottom:12px;position:relative;z-index:1}
+
+
+
+
+.pile-slot{width:var(--card-w);height:var(--card-h);border:2px dashed rgba(255,255,255,0.12);border-radius:var(--card-radius);position:relative;flex-shrink:0;background:rgba(0,0,0,0.15)}
+
+.pile-slot.foundation{border-color:rgba(125,232,212,0.35);background:rgba(125,232,212,0.04)}
+
+
+
+
+.card-stack{position:relative;width:var(--card-w);flex-shrink:0}
+
+
+
+
+.card{width:var(--card-w);height:var(--card-h);border-radius:var(--card-radius);position:absolute;cursor:pointer;transition:box-shadow 0.1s;display:flex;flex-direction:column;padding:4px}
+
+.card.face-down{background:linear-gradient(145deg,#1c1650,#0f0c30);border:1px solid #4a3f88;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.5)}
+
+.card.face-down .card-back-svg{position:absolute;inset:0;width:100%;height:100%;opacity:0.35}
+
+.card.face-down .card-back-city{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:7px;font-family:'Space Mono',monospace;letter-spacing:0.5px;color:rgba(125,232,212,0.5);font-weight:700}
+
+.card.face-down::after{content:'';position:absolute;inset:3px;border-radius:4px;border:1px solid rgba(125,232,212,0.15)}
+
+.card.face-up{background:#ffffff;border:1px solid #c8c0e0;box-shadow:0 2px 8px rgba(0,0,0,0.4),0 1px 2px rgba(0,0,0,0.3)}
+
+.card.face-up.red .rank,.card.face-up.red .suit-center,.card.face-up.red .suit-tl,.card.face-up.red .rank-br{color:#c0002a}
+
+.card.face-up.black .rank,.card.face-up.black .suit-center,.card.face-up.black .suit-tl,.card.face-up.black .rank-br{color:#0a0820}
+
+.card .rank{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;line-height:1;position:absolute;top:4px;left:5px}
+
+.card .suit-tl{font-size:11px;position:absolute;top:18px;left:6px}
+
+.card .suit-center{font-size:28px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+
+.card .rank-br{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;position:absolute;bottom:4px;right:5px;transform:rotate(180deg)}
+
+.card.selected{box-shadow:0 0 0 2.5px var(--accent),0 4px 20px rgba(125,232,212,0.3),0 2px 8px rgba(0,0,0,0.4)}
+
+.card.dragging{opacity:0.75;z-index:1000}
+
+
+
+
+.empty-foundation{width:var(--card-w);height:var(--card-h);border-radius:var(--card-radius);border:2px dashed rgba(125,232,212,0.35);display:flex;align-items:center;justify-content:center;font-size:22px;opacity:0.5;flex-shrink:0;background:rgba(125,232,212,0.04)}
+
+
+
+
+/* ── WIN SCREEN ── */
+
+#screen-win{background:var(--bg);align-items:center;justify-content:center;padding:20px;text-align:center}
+
+.win-stamp{width:120px;height:120px;border-radius:50%;border:3px solid var(--pink);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;animation:stampDrop 0.5s cubic-bezier(0.175,0.885,0.32,1.275)}
+
+@keyframes stampDrop{from{transform:scale(0) rotate(-30deg);opacity:0}to{transform:scale(1) rotate(-8deg);opacity:1}}
+
+.win-icon{font-size:52px;transform:rotate(8deg)}
+
+.win-title{font-size:32px;font-weight:700;margin-bottom:4px}
+
+.win-sub{font-size:14px;color:var(--muted);margin-bottom:20px}
+
+.win-stats{display:flex;gap:24px;justify-content:center;margin-bottom:24px}
+
+.win-stat .val{font-size:24px;font-weight:700;font-family:'Space Mono',monospace}
+
+.win-stat .lbl{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;margin-top:2px}
+
+.win-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+
+
+
+/* ── PASSPORT SCREEN ── */
+
+#screen-passport{background:var(--bg);padding:20px}
+
+.passport-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+
+.passport-header h2{font-size:20px;font-weight:700;flex:1}
+
+.passport-count{font-family:'Space Mono',monospace;font-size:13px;color:var(--gold)}
+
+
+
+
+.pregion-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+
+.pregion-tab{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;font-family:'Space Mono',monospace;cursor:pointer;color:var(--muted);transition:all 0.15s;font-weight:700;letter-spacing:1px}
+
+.pregion-tab.active{border-style:solid;color:#fff}
+
+
+
+
+.passport-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+
+.pstamp{border-radius:8px;padding:12px 6px;text-align:center;border:1px solid;transition:transform 0.12s}
+
+.pstamp.stamped{border-style:solid;cursor:default}
+
+.pstamp.locked{opacity:0.3;border-style:dashed}
+
+.pstamp:hover.stamped{transform:scale(1.05)}
+
+.pstamp .ps-icon{font-size:22px;margin-bottom:4px}
+
+.pstamp .ps-name{font-size:11px;font-weight:600;line-height:1.3}
+
+.pstamp .ps-date{font-size:9px;margin-top:3px;font-family:'Space Mono',monospace;opacity:0.7}
+
+
+
+
+/* progress bar */
+
+.progress-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+
+.progress-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+
+.progress-fill{height:100%;border-radius:2px;transition:width 0.4s}
+
+.progress-label{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
+
+
+
+
+/* ── TOAST ── */
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:13px;font-weight:600;transition:transform 0.3s;z-index:9999;pointer-events:none}
+
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+
+
+
+/* ── NAV ── */
+
+.nav{display:flex;gap:4px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);justify-content:center}
+
+.nav-btn{background:transparent;border:none;color:var(--muted);font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;transition:all 0.15s}
+
+.nav-btn:hover{color:var(--text);background:var(--surface2)}
+
+.nav-btn.active{color:var(--accent);background:rgba(125,232,212,0.08)}
+
+</style>
+
+</head>
+
+<body>
+
+
+
+
+<!-- TOAST -->
+
+<div class="toast" id="toast"></div>
+
+
+
+
+<!-- SCREEN: DESTINATION PICKER -->
+
+<div class="screen active" id="screen-pick">
+
+  <div class="nav">
+
+    <button class="nav-btn active" onclick="showScreen('pick')">✈ Destinations</button>
+
+    <button class="nav-btn" onclick="showScreen('passport')">📕 Passport</button>
+
+  </div>
+
+  <div style="flex:1;overflow:auto;padding:20px">
+
+    <div class="pick-header">
+
+      <div class="logo">PASSPORT SOLITAIRE</div>
+
+      <h1>Where are you flying?</h1>
+
+      <p>Win a game to stamp your passport</p>
+
+    </div>
+
+    <div class="region-tabs" id="pick-tabs"></div>
+
+    <div class="diff-pills" style="justify-content:center;margin-bottom:16px">
+
+      <span style="font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;margin-right:4px">DIFFICULTY:</span>
+
+      <button class="dpill easy active" onclick="setDiff('easy',this)">EASY</button>
+
+      <button class="dpill medium" onclick="setDiff('medium',this)">MEDIUM</button>
+
+      <button class="dpill hard" onclick="setDiff('hard',this)">HARD</button>
+
+    </div>
+
+    <div class="dest-grid" id="dest-grid"></div>
+
+    <div class="pick-footer" id="pick-footer"></div>
+
+  </div>
+
+</div>
+
+
+
+
+<!-- SCREEN: GAME -->
+
+<div class="screen" id="screen-game">
+
+  <div class="game-bar">
+
+    <div class="dest-info">
+
+      <div class="dest-flag" id="g-flag">🗼</div>
+
+      <div>
+
+        <div class="dest-label">FLYING TO</div>
+
+        <div class="dest-title" id="g-dest">Paris</div>
+
+      </div>
+
+    </div>
+
+    <div class="stats">
+
+      <div style="text-align:center">
+
+        <div class="stat-val" id="g-moves">0</div>
+
+        <div class="stat-label">MOVES</div>
+
+      </div>
+
+      <div style="text-align:center">
+
+        <div class="stat-val" id="g-time">00:00</div>
+
+        <div class="stat-label">TIME</div>
+
+      </div>
+
+    </div>
+
+    <button class="btn sm" onclick="undoMove()">↩ Undo</button>
+
+    <button class="btn sm accent" onclick="showScreen('pick')">✈ Change</button>
+
+    <button class="btn sm" onclick="startGame(currentDest)">↺ New</button>
+
+  </div>
+
+  <div class="table-area" id="table-area">
+
+    <div class="table-watermark" id="table-watermark">🗼</div>
+
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+
+      <div class="stock-waste" id="stock-waste"></div>
+
+      <div class="foundations-row" id="foundations"></div>
+
+    </div>
+
+    <div class="tableau-row" id="tableau"></div>
+
+  </div>
+
+</div>
+
+
+
+
+<!-- SCREEN: WIN -->
+
+<div class="screen" id="screen-win">
+
+  <div style="width:100%;max-width:480px;margin:0 auto">
+
+    <div class="win-stamp" id="win-stamp-circle">
+
+      <div class="win-icon" id="win-icon">✈</div>
+
+    </div>
+
+    <div class="win-title" id="win-title">Stamped!</div>
+
+    <div class="win-sub" id="win-sub">You've visited Paris</div>
+
+    <div class="win-stats">
+
+      <div class="win-stat"><div class="val" id="win-moves">0</div><div class="lbl">MOVES</div></div>
+
+      <div class="win-stat"><div class="val" id="win-time">0:00</div><div class="lbl">TIME</div></div>
+
+      <div class="win-stat"><div class="val" id="win-total">0</div><div class="lbl">STAMPED</div></div>
+
+    </div>
+
+    <div class="win-actions">
+
+      <button class="btn accent" onclick="showScreen('passport')">📕 View Passport</button>
+
+      <button class="btn" onclick="showScreen('pick')">✈ Next Destination</button>
+
+      <button class="btn" onclick="startGame(currentDest)">↺ Play Again</button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+<!-- SCREEN: PASSPORT -->
+
+<div class="screen" id="screen-passport">
+
+  <div class="nav">
+
+    <button class="nav-btn" onclick="showScreen('pick')">✈ Destinations</button>
+
+    <button class="nav-btn active" onclick="showScreen('passport')">📕 Passport</button>
+
+  </div>
+
+  <div style="flex:1;overflow:auto;padding:20px">
+
+    <div class="passport-header">
+
+      <h2>Your Passport</h2>
+
+      <div class="passport-count" id="passport-count">0 / 55 stamped</div>
+
+    </div>
+
+    <div class="progress-row">
+
+      <div class="progress-bar"><div class="progress-fill" id="global-progress" style="width:0%;background:var(--gold)"></div></div>
+
+      <div class="progress-label" id="progress-pct">0%</div>
+
+    </div>
+
+    <div class="pregion-tabs" id="passport-tabs"></div>
+
+    <div class="passport-grid" id="passport-grid"></div>
+
+  </div>
+
+</div>
+
+
+
+
+<script>
+
+// ══════════════════════════════════════════
+
+// DATA
+
+// ══════════════════════════════════════════
+
+const REGIONS = [
+
+  {name:"Europe",color:"#ff6ec7",icon:"🏰",
+
+   places:[
+
+    {name:"Paris",icon:"🗼",diff:"easy"},
+
+    {name:"London",icon:"🎡",diff:"easy"},
+
+    {name:"Rome",icon:"🏛️",diff:"easy"},
+
+    {name:"Barcelona",icon:"🎨",diff:"medium"},
+
+    {name:"Amsterdam",icon:"🚲",diff:"easy"},
+
+    {name:"Prague",icon:"🏯",diff:"medium"},
+
+    {name:"Athens",icon:"⚡",diff:"medium"},
+
+    {name:"Santorini",icon:"🌊",diff:"medium"},
+
+    {name:"Lisbon",icon:"🚃",diff:"easy"},
+
+    {name:"Vienna",icon:"🎻",diff:"medium"},
+
+    {name:"Edinburgh",icon:"🏴󠁧󠁢󠁳󠁣󠁴󠁿",diff:"hard"},
+
+    {name:"Istanbul",icon:"🕌",diff:"hard"},
+
+  ]},
+
+  {name:"Asia",color:"#4ee1c2",icon:"🏮",
+
+   places:[
+
+    {name:"Tokyo",icon:"🗾",diff:"easy"},
+
+    {name:"Kyoto",icon:"⛩️",diff:"easy"},
+
+    {name:"Bangkok",icon:"🛕",diff:"medium"},
+
+    {name:"Bali",icon:"🌺",diff:"easy"},
+
+    {name:"Singapore",icon:"🦁",diff:"medium"},
+
+    {name:"Hong Kong",icon:"🌃",diff:"medium"},
+
+    {name:"Seoul",icon:"🏮",diff:"medium"},
+
+    {name:"Shanghai",icon:"🏙️",diff:"hard"},
+
+    {name:"Mumbai",icon:"🌶️",diff:"hard"},
+
+    {name:"Kathmandu",icon:"🏔️",diff:"hard"},
+
+    {name:"Hanoi",icon:"🍜",diff:"medium"},
+
+    {name:"Dubai",icon:"🌆",diff:"hard"},
+
+  ]},
+
+  {name:"Africa",color:"#ffc857",icon:"🌍",
+
+   places:[
+
+    {name:"Marrakech",icon:"🕯️",diff:"easy"},
+
+    {name:"Cairo",icon:"🐪",diff:"medium"},
+
+    {name:"Cape Town",icon:"🌋",diff:"medium"},
+
+    {name:"Nairobi",icon:"🦁",diff:"medium"},
+
+    {name:"Zanzibar",icon:"🏝️",diff:"easy"},
+
+    {name:"Casablanca",icon:"🎬",diff:"easy"},
+
+    {name:"Accra",icon:"🥁",diff:"hard"},
+
+    {name:"Tunis",icon:"🏺",diff:"medium"},
+
+  ]},
+
+  {name:"Americas",color:"#7b9dff",icon:"🌎",
+
+   places:[
+
+    {name:"Rio de Janeiro",icon:"🎭",diff:"easy"},
+
+    {name:"New York",icon:"🗽",diff:"easy"},
+
+    {name:"New Orleans",icon:"🎷",diff:"easy"},
+
+    {name:"Havana",icon:"🎺",diff:"medium"},
+
+    {name:"Mexico City",icon:"🌮",diff:"medium"},
+
+    {name:"Buenos Aires",icon:"💃",diff:"medium"},
+
+    {name:"Cartagena",icon:"🌸",diff:"hard"},
+
+    {name:"Machu Picchu",icon:"🦙",diff:"hard"},
+
+    {name:"Vancouver",icon:"🍁",diff:"easy"},
+
+  ]},
+
+  {name:"Oceania",color:"#a78bfa",icon:"🌏",
+
+   places:[
+
+    {name:"Sydney",icon:"🦘",diff:"easy"},
+
+    {name:"Auckland",icon:"🐑",diff:"easy"},
+
+    {name:"Fiji",icon:"🌴",diff:"easy"},
+
+    {name:"Honolulu",icon:"🌺",diff:"medium"},
+
+  ]},
+
+  {name:"Middle East",color:"#f97316",icon:"🌙",
+
+   places:[
+
+    {name:"Jerusalem",icon:"✡️",diff:"hard"},
+
+    {name:"Petra",icon:"🏜️",diff:"hard"},
+
+    {name:"Muscat",icon:"⛵",diff:"medium"},
+
+    {name:"Doha",icon:"🌙",diff:"medium"},
+
+  ]},
+
+  {name:"Wild Cards",color:"#34d399",icon:"🗺️",
+
+   places:[
+
+    {name:"Easter Island",icon:"🗿",diff:"hard"},
+
+    {name:"Maldives",icon:"🐟",diff:"medium"},
+
+    {name:"Svalbard",icon:"🐻‍❄️",diff:"hard"},
+
+    {name:"Galápagos",icon:"🐢",diff:"hard"},
+
+    {name:"Faroe Islands",icon:"🌧️",diff:"hard"},
+
+    {name:"Patagonia",icon:"🏔️",diff:"hard"},
+
+  ]},
+
+];
+
+
+
+
+const ALL_PLACES = REGIONS.flatMap(r=>r.places.map(p=>({...p,region:r.name})));
+
+const DIFF_DRAW = {easy:3,medium:1,hard:1};
+
+const DIFF_PASS = {easy:1,medium:1,hard:0}; // 0 = no re-deal
+
+
+
+
+// ══════════════════════════════════════════
+
+// STATE
+
+// ══════════════════════════════════════════
+
+let stamped = JSON.parse(localStorage.getItem('ps_stamped')||'{}'); // {name: dateString}
+
+let currentDest = null;
+
+let currentDiff = 'easy';
+
+let currentPickRegion = 0;
+
+let currentPassportRegion = 0;
+
+
+
+
+// Game state
+
+let stock=[], waste=[], foundations=[[],[],[],[]], tableau=[];
+
+let moveCount=0, timerInterval=null, seconds=0;
+
+let history=[];
+
+let gameWon=false;
+
+
+
+
+// ══════════════════════════════════════════
+
+// HELPERS
+
+// ══════════════════════════════════════════
+
+const SUITS=['♠','♥','♦','♣'];
+
+const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+
+const RED_SUITS=new Set(['♥','♦']);
+
+function rankVal(r){return RANKS.indexOf(r);}
+
+function isRed(s){return RED_SUITS.has(s);}
+
+function suitIdx(s){return SUITS.indexOf(s);}
+
+function regionOf(name){return REGIONS.find(r=>r.places.some(p=>p.name===name));}
+
+function totalStamped(){return Object.keys(stamped).length;}
+
+function saveStamped(){localStorage.setItem('ps_stamped',JSON.stringify(stamped));}
+
+
+
+
+function toast(msg,color='var(--accent)'){
+
+  const t=document.getElementById('toast');
+
+  t.textContent=msg; t.style.color=color; t.style.borderColor=color;
+
+  t.classList.add('show');
+
+  setTimeout(()=>t.classList.remove('show'),2500);
+
+}
+
+
+
+
+function showScreen(name){
+
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+
+  document.getElementById('screen-'+name).classList.add('active');
+
+  if(name==='pick') renderPicker();
+
+  if(name==='passport') renderPassport();
+
+  if(name==='win') renderWin();
+
+}
+
+
+
+
+// ══════════════════════════════════════════
+
+// DECK
+
+// ══════════════════════════════════════════
+
+function makeDeck(){
+
+  const d=[];
+
+  for(const s of SUITS) for(const r of RANKS) d.push({suit:s,rank:r,faceUp:false});
+
+  return d;
+
+}
+
+function shuffle(arr){
+
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+
+  return arr;
+
+}
+
+
+
+
+// ══════════════════════════════════════════
+
+// GAME INIT
+
+// ══════════════════════════════════════════
+
+function startGame(dest){
+
+  if(!dest) return;
+
+  currentDest=dest;
+
+  gameWon=false;
+
+  moveCount=0; seconds=0;
+
+  clearInterval(timerInterval);
+
+  history=[];
+
+
+
+
+  const deck=shuffle(makeDeck());
+
+  tableau=[]; stock=[]; waste=[]; foundations=[[],[],[],[]];
+
+
+
+
+  // Deal tableau
+
+  for(let col=0;col<7;col++){
+
+    tableau.push([]);
+
+    for(let row=0;row<=col;row++){
+
+      const card=deck.pop();
+
+      card.faceUp=(row===col);
+
+      tableau[col].push(card);
+
+    }
+
+  }
+
+  stock=deck.map(c=>({...c,faceUp:false}));
+
+
+
+
+  timerInterval=setInterval(()=>{
+
+    seconds++;
+
+    document.getElementById('g-time').textContent=fmtTime(seconds);
+
+  },1000);
+
+
+
+
+  const r=regionOf(dest.name);
+
+  document.getElementById('g-flag').textContent=dest.icon;
+
+  document.getElementById('g-dest').textContent=dest.name;
+
+  document.getElementById('table-watermark').textContent=dest.icon;
+
+  // Tint game bar border with region color
+
+  if(r) document.querySelector('.game-bar').style.borderBottomColor=r.color+'55';
+
+  else document.querySelector('.game-bar').style.borderBottomColor='';
+
+
+
+
+  showScreen('game');
+
+  renderTable();
+
+}
+
+
+
+
+function fmtTime(s){
+
+  return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+
+}
+
+
+
+
+// ══════════════════════════════════════════
+
+// RENDER TABLE
+
+// ══════════════════════════════════════════
+
+let selectedCard=null; // {from,colIdx,cardIdx,cards}
+
+
+
+
+function renderTable(){
+
+  document.getElementById('g-moves').textContent=moveCount;
+
+  renderStockWaste();
+
+  renderFoundations();
+
+  renderTableau();
+
+}
+
+
+
+
+function renderStockWaste(){
+
+  const el=document.getElementById('stock-waste');
+
+  el.innerHTML='';
+
+
+
+
+  // Stock
+
+  const stockSlot=document.createElement('div');
+
+  stockSlot.className='pile-slot';
+
+  stockSlot.style.cursor='pointer';
+
+  if(stock.length>0){
+
+    const top=cardEl({faceUp:false});
+
+    top.style.position='absolute';
+
+    stockSlot.appendChild(top);
+
+    stockSlot.onclick=drawFromStock;
+
+  } else {
+
+    stockSlot.innerHTML='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:0.3;cursor:pointer">↺</div>';
+
+    stockSlot.onclick=resetStock;
+
+  }
+
+  el.appendChild(stockSlot);
+
+
+
+
+  // Waste
+
+  const wasteSlot=document.createElement('div');
+
+  wasteSlot.className='pile-slot';
+
+  if(waste.length>0){
+
+    const top=waste[waste.length-1];
+
+    const ce=cardEl(top);
+
+    ce.style.position='absolute';
+
+    ce.onclick=()=>{
+
+      if(!selectedCard){
+
+        if(tryAutoFoundation(top,'waste',-1,waste.length-1)) return;
+
+      }
+
+      selectCard({from:'waste',colIdx:-1,cardIdx:waste.length-1,cards:[top]});
+
+    };
+
+    if(selectedCard&&selectedCard.from==='waste') ce.classList.add('selected');
+
+    wasteSlot.appendChild(ce);
+
+  }
+
+  el.appendChild(wasteSlot);
+
+}
+
+
+
+
+function renderFoundations(){
+
+  const el=document.getElementById('foundations');
+
+  el.innerHTML='';
+
+  for(let i=0;i<4;i++){
+
+    const slot=document.createElement('div');
+
+    slot.className='pile-slot foundation';
+
+    const pile=foundations[i];
+
+    if(pile.length>0){
+
+      const top=pile[pile.length-1];
+
+      const ce=cardEl(top);
+
+      ce.style.position='absolute';
+
+      slot.appendChild(ce);
+
+    } else {
+
+      const label=document.createElement('div');
+
+      label.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;opacity:0.2';
+
+      label.textContent=SUITS[i];
+
+      slot.appendChild(label);
+
+    }
+
+    slot.onclick=()=>moveToFoundation(i);
+
+    el.appendChild(slot);
+
+  }
+
+}
+
+
+
+
+function renderTableau(){
+
+  const el=document.getElementById('tableau');
+
+  el.innerHTML='';
+
+  for(let col=0;col<7;col++){
+
+    const stack=document.createElement('div');
+
+    stack.className='card-stack';
+
+    const cards=tableau[col];
+
+    const faceDownCount=cards.filter(c=>!c.faceUp).length;
+
+    const faceUpCount=cards.filter(c=>c.faceUp).length;
+
+    const stackH=Math.max(100,faceDownCount*18+faceUpCount*28+(faceUpCount>0?72:0));
+
+    stack.style.height=stackH+'px';
+
+
+
+
+    let offset=0;
+
+    cards.forEach((card,idx)=>{
+
+      const ce=cardEl(card);
+
+      ce.style.top=offset+'px';
+
+      if(card.faceUp){
+
+        const isSel=selectedCard&&selectedCard.from==='tableau'&&selectedCard.colIdx===col&&idx>=selectedCard.cardIdx;
+
+        if(isSel) ce.classList.add('selected');
+
+        ce.onclick=(e)=>{e.stopPropagation();handleTableauClick(col,idx);};
+
+        offset+=28;
+
+      } else {
+
+        offset+=18;
+
+      }
+
+      stack.appendChild(ce);
+
+    });
+
+
+
+
+    // drop target
+
+    stack.onclick=()=>{
+
+      if(selectedCard && !(selectedCard.from==='tableau'&&selectedCard.colIdx===col)) {
+
+        dropOnTableau(col);
+
+      }
+
+    };
+
+    el.appendChild(stack);
+
+  }
+
+}
+
+
+
+
+// ── SVG LANDMARKS per city ──────────────────────────────────────
+
+const LANDMARKS = {
+
+  // EUROPE
+
+  "Paris":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#7de8d4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="36" y1="10" x2="36" y2="12"/><line x1="36" y1="12" x2="33" y2="20"/><line x1="36"
+ y1="12" x2="39" y2="20"/><line x1="33" y1="20" x2="28" y2="35"/><line x1="39" y1="20" x2="44" y2="35"/><line x1="28" y1="35" x2="22" y2="60"/><line x1="44" y1="35" x2="50" y2="60"/><line x1="22" y1="60" x2="50" y2="60"/><line x1="24" y1="48" x2="48" y2="48"/><line
+ x1="30" y1="35" x2="42" y2="35"/><line x1="22" y1="60" x2="18" y2="72"/><line x1="50" y1="60" x2="54" y2="72"/><line x1="18" y1="72" x2="54" y2="72"/></g></svg>`,
+
+  "London":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ff6ec7" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="28" y="15" width="16" height="55" rx="1"/><rect x="20" y="55" width="32" height="15"
+ rx="1"/><rect x="16" y="65" width="40" height="5" rx="1"/><rect x="31" y="8" width="10" height="8" rx="1"/><rect x="33" y="4" width="6" height="5" rx="1"/><line x1="36" y1="4" x2="36" y2="2"/><rect x="30" y="30" width="5" height="8" rx="0.5"/><rect x="37"
+ y="30" width="5" height="8" rx="0.5"/><rect x="30" y="45" width="5" height="8" rx="0.5"/><rect x="37" y="45" width="5" height="8" rx="0.5"/></g></svg>`,
+
+  "Rome":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ffc857" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="36" cy="30" rx="18" ry="12"/><line x1="18" y1="30" x2="18" y2="65"/><line x1="54"
+ y1="30" x2="54" y2="65"/><line x1="18" y1="65" x2="54" y2="65"/><line x1="22" y1="65" x2="22" y2="72"/><line x1="50" y1="65" x2="50" y2="72"/><line x1="18" y1="72" x2="54" y2="72"/><line x1="24" y1="30" x2="24" y2="65"/><line x1="30" y1="30" x2="30" y2="65"/><line
+ x1="36" y1="30" x2="36" y2="65"/><line x1="42" y1="30" x2="42" y2="65"/><line x1="48" y1="30" x2="48" y2="65"/><ellipse cx="36" cy="30" rx="6" ry="4"/></g></svg>`,
+
+  "Barcelona":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#a78bfa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="72" x2="22" y2="20"/><line x1="50" y1="72" x2="50" y2="20"/><path
+ d="M22 20 Q36 8 50 20"/><circle cx="22" cy="15" r="5"/><circle cx="50" cy="15" r="5"/><path d="M22 15 Q36 5 50 15"/><line x1="22" y1="15" x2="22" y2="12"/><line x1="50" y1="15" x2="50" y2="12"/><path d="M22 45 Q36 38 50 45"/><path d="M22 55 Q36 48 50 55"/><line
+ x1="18" y1="72" x2="54" y2="72"/></g></svg>`,
+
+  "Amsterdam":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#4ee1c2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 72 L24 40 Q24 30 36 28 Q48 30 48 40 L48 72"/><path d="M18 72 L18 45 Q18
+ 33 36 30 Q54 33 54 45 L54 72"/><path d="M30 72 L30 42 L42 42 L42 72"/><rect x="33" y="50" width="6" height="10" rx="1"/><line x1="36" y1="28" x2="36" y2="18"/><path d="M30 18 Q36 12 42 18"/><line x1="14" y1="72" x2="58" y2="72"/></g></svg>`,
+
+  "Prague":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#f97316" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="26" y="40" width="20" height="32" rx="1"/><path d="M26 40 L36 22 L46 40"/><line
+ x1="36" y1="22" x2="36" y2="14"/><path d="M32 14 Q36 8 40 14"/><rect x="32" y="52" width="8" height="12" rx="1"/><rect x="28" y="44" width="5" height="7" rx="0.5"/><rect x="39" y="44" width="5" height="7" rx="0.5"/><line x1="20" y1="72" x2="52" y2="72"/></g></svg>`,
+
+  "Athens":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ffc857" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="16" y1="70" x2="56" y2="70"/><line x1="18" y1="66" x2="54" y2="66"/><line x1="20"
+ y1="30" x2="20" y2="66"/><line x1="26" y1="28" x2="26" y2="66"/><line x1="32" y1="28" x2="32" y2="66"/><line x1="38" y1="28" x2="38" y2="66"/><line x1="44" y1="28" x2="44" y2="66"/><line x1="50" y1="30" x2="50" y2="66"/><line x1="18" y1="30" x2="54" y2="30"/><line
+ x1="20" y1="28" x2="50" y2="28"/><line x1="22" y1="72" x2="22" y2="70"/><line x1="50" y1="72" x2="50" y2="70"/></g></svg>`,
+
+  "Santorini":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#7b9dff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 65 Q20 50 28 45 L28 72"/><path d="M28 45 L44 45 L44 72"/><path d="M28
+ 45 Q36 38 44 45"/><circle cx="36" cy="38" r="7"/><rect x="30" y="55" width="8" height="12" rx="1"/><path d="M44 50 L56 50 L56 72"/><path d="M44 50 Q50 44 56 50"/><line x1="14" y1="72" x2="58" y2="72"/></g></svg>`,
+
+  "Lisbon":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#f97316" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="36" y1="12" x2="36" y2="70"/><line x1="20" y1="55" x2="52" y2="55"/><path d="M36
+ 12 Q28 30 20 55"/><path d="M36 12 Q44 30 52 55"/><line x1="24" y1="38" x2="48" y2="38"/><path d="M28 55 L26 70"/><path d="M44 55 L46 70"/><line x1="22" y1="70" x2="50" y2="70"/><circle cx="36" cy="10" r="3"/></g></svg>`,
+
+  "Vienna":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#a78bfa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="42" width="32" height="28" rx="1"/><path d="M20 42 L36 18 L52 42"/><path
+ d="M26 42 L36 24 L46 42"/><circle cx="36" cy="38" r="5"/><line x1="36" y1="18" x2="36" y2="12"/><path d="M32 12 L36 8 L40 12"/><line x1="28" y1="54" x2="28" y2="70"/><line x1="44" y1="54" x2="44" y2="70"/><rect x="32" y="54" width="8" height="12" rx="1"/><line
+ x1="18" y1="70" x2="54" y2="70"/></g></svg>`,
+
+  "Edinburgh":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 72 L20 50 Q20 40 26 36 L26 72"/><path d="M26 36 L36 20 L46 36"/><line
+ x1="36" y1="20" x2="36" y2="12"/><path d="M32 12 L36 8 L40 12"/><line x1="46" y1="36" x2="46" y2="72"/><rect x="30" y="52" width="12" height="16" rx="1"/><path d="M28 44 L44 44"/><path d="M22 58 L26 58"/><path d="M46 58 L50 58"/><line x1="18" y1="72" x2="54"
+ y2="72"/></g></svg>`,
+
+  "Istanbul":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ff6ec7" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M36 18 Q48 22 50 35 Q50 50 36 52 Q22 50 22 35 Q22 22 36 18Z"/><line x1="36"
+ y1="12" x2="36" y2="18"/><path d="M32 10 Q36 6 40 10"/><line x1="36" y1="6" x2="36" y2="4"/><line x1="30" y1="52" x2="28" y2="65"/><line x1="42" y1="52" x2="44" y2="65"/><line x1="24" y1="65" x2="48" y2="65"/><line x1="20" y1="72" x2="52" y2="72"/><line x1="24"
+ y1="68" x2="48" y2="68"/></g></svg>`,
+
+  // ASIA
+
+  "Tokyo":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#4ee1c2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="36" y1="8" x2="36" y2="72"/><path d="M36 8 Q44 20 44 28 Q44 36 36 38 Q28 36 28
+ 28 Q28 20 36 8"/><rect x="28" y="38" width="16" height="10" rx="1"/><rect x="24" y="48" width="24" height="8" rx="1"/><rect x="20" y="56" width="32" height="8" rx="1"/><rect x="22" y="64" width="28" height="8" rx="1"/></g></svg>`,
+
+  "Kyoto":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ff6ec7" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="72" x2="50" y2="72"/><rect x="26" y="55" width="20" height="17" rx="0.5"/><path
+ d="M22 55 L36 44 L50 55"/><rect x="28" y="40" width="16" height="15" rx="0.5"/><path d="M24 40 L36 30 L48 40"/><rect x="30" y="26" width="12" height="14" rx="0.5"/><path d="M27 26 L36 18 L45 26"/><line x1="36" y1="18" x2="36" y2="12"/><path d="M32 12 L36 8
+ L40 12"/><rect x="32" y="60" width="8" height="12" rx="0.5"/></g></svg>`,
+
+  "Bangkok":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ffc857" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="26" y="50" width="20" height="22" rx="0.5"/><path d="M22 50 L36 38 L50 50"/><rect
+ x="28" y="36" width="16" height="14" rx="0.5"/><path d="M24 36 L36 26 L48 36"/><rect x="30" y="22" width="12" height="14" rx="0.5"/><path d="M27 22 L36 14 L45 22"/><line x1="36" y1="14" x2="36" y2="8"/><circle cx="36" cy="6" r="3"/><rect x="32" y="57" width="8"
+ height="12" rx="0.5"/><line x1="18" y1="72" x2="54" y2="72"/></g></svg>`,
+
+  "Bali":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="36" y1="72" x2="36" y2="18"/><path d="M36 18 Q44 22 46 30 Q44 38 36 40 Q28 38
+ 26 30 Q28 22 36 18"/><path d="M36 40 Q44 44 46 52 Q44 60 36 62 Q28 60 26 52 Q28 44 36 40"/><line x1="28" y1="30" x2="44" y2="30"/><line x1="28" y1="50" x2="44" y2="50"/><line x1="20" y1="72" x2="52" y2="72"/></g></svg>`,
+
+  "Singapore":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#7b9dff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="28" y1="72" x2="28" y2="30"/><line x1="44" y1="72" x2="44" y2="30"/><line
+ x1="36" y1="72" x2="36" y2="20"/><path d="M28 30 Q36 22 44 30"/><path d="M24 60 Q36 54 48 60"/><ellipse cx="36" cy="18" rx="10" ry="6"/><line x1="16" y1="72" x2="56" y2="72"/><rect x="30" y="58" width="12" height="14" rx="0.5"/></g></svg>`,
+
+  "Hong Kong":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ff6ec7" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="40" width="10" height="32" rx="0.5"/><rect x="30" y="30" width="10"
+ height="42" rx="0.5"/><rect x="44" y="20" width="10" height="52" rx="0.5"/><rect x="20" y="38" width="6" height="4"/><rect x="32" y="28" width="6" height="4"/><rect x="46" y="18" width="6" height="4"/><line x1="14" y1="72" x2="58" y2="72"/><path d="M18 55
+ Q36 48 54 55"/></g></svg>`,
+
+  "Seoul":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#4ee1c2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="22" y="48" width="28" height="24" rx="0.5"/><path d="M18 48 L36 34 L54 48"/><rect
+ x="26" y="38" width="20" height="10" rx="0.5"/><path d="M22 38 L36 26 L50 38"/><line x1="36" y1="26" x2="36" y2="18"/><path d="M30 18 Q36 12 42 18"/><rect x="30" y="56" width="12" height="16" rx="0.5"/><line x1="16" y1="72" x2="56" y2="72"/></g></svg>`,
+
+  "Shanghai":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#a78bfa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="36" y1="6" x2="36" y2="72"/><ellipse cx="36" cy="45" rx="14" ry="5"/><ellipse
+ cx="36" cy="35" rx="10" ry="4"/><rect x="33" y="6" width="6" height="20"/><path d="M30 6 L36 2 L42 6"/><line x1="22" y1="72" x2="50" y2="72"/><line x1="26" y1="45" x2="26" y2="65"/><line x1="46" y1="45" x2="46" y2="65"/></g></svg>`,
+
+  "Mumbai":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ffc857" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="40" width="32" height="32" rx="1"/><path d="M20 40 Q36 24 52 40"/><path
+ d="M26 40 Q36 28 46 40"/><circle cx="36" cy="36" r="5"/><line x1="36" y1="24" x2="36" y2="18"/><path d="M30 18 L36 12 L42 18"/><rect x="28" y="52" width="6" height="12" rx="0.5"/><rect x="38" y="52" width="6" height="12" rx="0.5"/><line x1="16" y1="72" x2="56"
+ y2="72"/></g></svg>`,
+
+  "Kathmandu":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 72 Q24 50 36 12 Q48 50 56 72"/><path d="M24 55 Q36 38 48 55"/><path d="M28
+ 65 Q36 52 44 65"/><line x1="34" y1="12" x2="38" y2="12"/><line x1="36" y1="12" x2="36" y2="6"/><line x1="33" y1="8" x2="39" y2="8"/><line x1="14" y1="72" x2="58" y2="72"/></g></svg>`,
+
+  "Hanoi":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#f97316" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="26" y="42" width="20" height="30" rx="0.5"/><path d="M22 42 L36 30 L50 42"/><rect
+ x="28" y="30" width="16" height="12" rx="0.5"/><path d="M24 30 L36 20 L48 30"/><line x1="36" y1="20" x2="36" y2="12"/><path d="M30 12 Q36 6 42 12"/><rect x="32" y="52" width="8" height="14" rx="0.5"/><line x1="18" y1="72" x2="54" y2="72"/></g></svg>`,
+
+  "Dubai":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ffc857" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="36" y1="6" x2="36" y2="72"/><path d="M36 6 Q44 16 46 30 Q46 50 36 55 Q26 50 26
+ 30 Q26 16 36 6"/><path d="M32 55 Q36 60 40 55"/><line x1="26" y1="30" x2="46" y2="30"/><line x1="28" y1="42" x2="44" y2="42"/><line x1="20" y1="72" x2="52" y2="72"/></g></svg>`,
+
+  // AFRICA
+
+  "Marrakech":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ffc857" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="24" y="40" width="24" height="32" rx="0.5"/><path d="M24 40 L36 24 L48 40"/><path
+ d="M28 40 L36 28 L44 40"/><line x1="36" y1="24" x2="36" y2="16"/><path d="M32 16 Q36 10 40 16"/><circle cx="36" cy="9" r="2"/><rect x="30" y="50" width="12" height="14" rx="0.5"/><rect x="26" y="44" width="5" height="7" rx="0.5"/><rect x="41" y="44" width="5"
+ height="7" rx="0.5"/><line x1="18" y1="72" x2="54" y2="72"/></g></svg>`,
+
+  "Cairo":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ffc857" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 72 L36 20 L52 72Z"/><line x1="26" y1="55" x2="46" y2="55"/><line x1="23" y1="63"
+ x2="49" y2="63"/><line x1="30" y1="42" x2="42" y2="42"/><line x1="36" y1="20" x2="36" y2="16"/><line x1="14" y1="72" x2="58" y2="72"/></g></svg>`,
+
+  "Cape Town":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ff6ec7" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 55 Q36 20 56 55"/><path d="M22 55 Q36 28 50 55"/><path d="M28 55 Q36 36
+ 44 55"/><line x1="14" y1="55" x2="58" y2="55"/><path d="M22 55 L20 72"/><path d="M50 55 L52 72"/><line x1="16" y1="72" x2="56" y2="72"/><line x1="36" y1="55" x2="36" y2="72"/></g></svg>`,
+
+  "Nairobi":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="22" y="38" width="28" height="34" rx="0.5"/><path d="M22 38 Q36 24 50 38"/><line
+ x1="36" y1="24" x2="36" y2="16"/><path d="M32 16 L36 10 L40 16"/><rect x="28" y="48" width="6" height="10" rx="0.5"/><rect x="38" y="48" width="6" height="10" rx="0.5"/><line x1="22" y1="60" x2="50" y2="60"/><line x1="16" y1="72" x2="56" y2="72"/></g></svg>`,
+
+  "Zanzibar":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#4ee1c2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 72 Q16 55 28 48 Q36 44 36 35 Q36 25 44 20"/><path d="M44 20 Q52 28 52 40
+ Q52 55 44 62 Q36 68 28 68 L28 72"/><circle cx="44" cy="18" r="4"/><path d="M28 48 Q36 52 44 48"/><path d="M24 60 Q36 65 46 60"/><line x1="14" y1="72" x2="58" y2="72"/></g></svg>`,
+
+  "Casablanca":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#7b9dff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="24" y="40" width="24" height="32" rx="0.5"/><path d="M24 40 Q36 28 48 40"/><path
+ d="M28 40 Q36 32 44 40"/><circle cx="36" cy="34" r="4"/><line x1="36" y1="28" x2="36" y2="20"/><path d="M32 20 Q36 14 40 20"/><rect x="30" y="52" width="12" height="14" rx="0.5"/><line x1="18" y1="72" x2="54" y2="72"/></g></svg>`,
+
+  "Accra":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ffc857" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="42" width="32" height="30" rx="0.5"/><path d="M20 42 L36 26 L52 42"/><line
+ x1="36" y1="26" x2="36" y2="16"/><circle cx="36" cy="13" r="4"/><rect x="26" y="52" width="8" height="12" rx="0.5"/><rect x="38" y="52" width="8" height="12" rx="0.5"/><line x1="16" y1="72" x2="56" y2="72"/></g></svg>`,
+
+  "Tunis":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#a78bfa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="26" y="44" width="20" height="28" rx="0.5"/><path d="M26 44 Q36 30 46 44"/><path
+ d="M30 44 Q36 34 42 44"/><circle cx="36" cy="32" r="5"/><line x1="36" y1="26" x2="36" y2="18"/><path d="M32 18 Q36 12 40 18"/><rect x="30" y="56" width="12" height="14" rx="0.5"/><line x1="18" y1="72" x2="54" y2="72"/></g></svg>`,
+
+  // AMERICAS
+
+  "Rio de Janeiro":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#7b9dff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="36" y1="8" x2="36" y2="40"/><path d="M36 40 L28 55 L44 55Z"/><line x1="28"
+ y1="40" x2="44" y2="40"/><line x1="36" y1="8" x2="26" y2="26"/><line x1="36" y1="8" x2="46" y2="26"/><path d="M20 65 Q30 55 36 55 Q42 55 52 65"/><path d="M18 70 Q28 58 36 58 Q44 58 54 70"/><line x1="14" y1="72" x2="58" y2="72"/></g></svg>`,
+
+  "New York":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#7b9dff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="36" y1="6" x2="36" y2="50"/><path d="M30 50 L30 58 L42 58 L42 50 Q36 44 30
+ 50"/><line x1="26" y1="58" x2="46" y2="58"/><line x1="26" y1="62" x2="46" y2="62"/><line x1="26" y1="58" x2="26" y2="72"/><line x1="46" y1="58" x2="46" y2="72"/><path d="M33 6 L36 2 L39 6"/><line x1="30" y1="28" x2="42" y2="28"/><line x1="18" y1="72" x2="54"
+ y2="72"/></g></svg>`,
+
+  "New Orleans":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#a78bfa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="38" width="32" height="34" rx="1"/><path d="M20 38 Q36 24 52 38"/><line
+ x1="36" y1="24" x2="36" y2="18"/><path d="M32 18 Q36 12 40 18"/><rect x="26" y="48" width="8" height="10" rx="0.5"/><rect x="38" y="48" width="8" height="10" rx="0.5"/><rect x="32" y="56" width="8" height="16" rx="0.5"/><path d="M20 52 Q16 52 16 56 Q16 60
+ 20 60"/><path d="M52 52 Q56 52 56 56 Q56 60 52 60"/><line x1="16" y1="72" x2="56" y2="72"/></g></svg>`,
+
+  "Havana":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ffc857" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="22" y="40" width="28" height="32" rx="1"/><path d="M22 40 Q36 26 50 40"/><line
+ x1="36" y1="26" x2="36" y2="18"/><ellipse cx="36" cy="16" rx="6" ry="4"/><line x1="36" y1="12" x2="36" y2="8"/><circle cx="36" cy="6" r="3"/><rect x="30" y="52" width="12" height="14" rx="0.5"/><rect x="24" y="44" width="6" height="8" rx="0.5"/><rect x="42"
+ y="44" width="6" height="8" rx="0.5"/><line x1="16" y1="72" x2="56" y2="72"/></g></svg>`,
+
+  "Mexico City":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="26" y="50" width="20" height="22" rx="0.5"/><path d="M22 50 L36 38 L50 50"/><rect
+ x="28" y="38" width="16" height="12" rx="0.5"/><path d="M24 38 L36 28 L48 38"/><rect x="30" y="28" width="12" height="10" rx="0.5"/><path d="M27 28 L36 20 L45 28"/><line x1="36" y1="20" x2="36" y2="14"/><path d="M33 14 L36 10 L39 14"/><rect x="32" y="56" width="8"
+ height="16" rx="0.5"/><line x1="18" y1="72" x2="54" y2="72"/></g></svg>`,
+
+  "Buenos Aires":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ff6ec7" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="36" width="32" height="36" rx="1"/><path d="M20 36 Q36 20 52 36"/><line
+ x1="36" y1="20" x2="36" y2="12"/><path d="M30 12 Q36 6 42 12"/><rect x="26" y="46" width="8" height="10" rx="0.5"/><rect x="38" y="46" width="8" height="10" rx="0.5"/><rect x="30" y="58" width="12" height="14" rx="0.5"/><line x1="20" y1="56" x2="52" y2="56"/><line
+ x1="16" y1="72" x2="56" y2="72"/></g></svg>`,
+
+  "Cartagena":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#f97316" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="48" width="36" height="24" rx="1"/><path d="M18 48 Q36 32 54 48"/><line
+ x1="36" y1="32" x2="36" y2="22"/><path d="M30 22 Q36 14 42 22"/><rect x="24" y="56" width="8" height="12" rx="0.5"/><rect x="40" y="56" width="8" height="12" rx="0.5"/><line x1="18" y1="58" x2="54" y2="58"/><line x1="14" y1="72" x2="58" y2="72"/></g></svg>`,
+
+  "Machu Picchu":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 72 Q20 55 28 45 L28 72"/><path d="M28 45 Q32 35 36 32 Q40 35 44 45
+ L44 72"/><path d="M44 45 Q50 40 56 50 L56 72"/><line x1="36" y1="32" x2="36" y2="22"/><path d="M32 22 L36 16 L40 22"/><line x1="28" y1="58" x2="44" y2="58"/><line x1="12" y1="72" x2="60" y2="72"/></g></svg>`,
+
+  "Vancouver":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#4ee1c2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 60 Q20 40 28 32 Q32 30 36 32 Q40 30 44 32 Q52 40 56 60"/><path d="M28
+ 32 L36 10 L44 32"/><line x1="36" y1="10" x2="36" y2="6"/><line x1="20" y1="50" x2="52" y2="50"/><line x1="14" y1="72" x2="58" y2="72"/><line x1="14" y1="65" x2="58" y2="65"/></g></svg>`,
+
+  // OCEANIA
+
+  "Sydney":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#a78bfa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 60 Q24 35 36 30 Q48 35 56 60"/><path d="M20 60 Q28 40 36 35 Q44 40 52 60"/><path
+ d="M26 60 Q32 48 36 44 Q40 48 46 60"/><line x1="14" y1="60" x2="58" y2="60"/><line x1="14" y1="64" x2="58" y2="64"/><line x1="14" y1="72" x2="58" y2="72"/><rect x="30" y="64" width="12" height="8" rx="0.5"/></g></svg>`,
+
+  "Auckland":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="36" y1="6" x2="36" y2="72"/><path d="M36 6 Q42 14 44 24 Q44 38 36 42 Q28 38
+ 28 24 Q28 14 36 6"/><line x1="28" y1="24" x2="44" y2="24"/><line x1="26" y1="38" x2="46" y2="38"/><line x1="22" y1="72" x2="50" y2="72"/></g></svg>`,
+
+  "Fiji":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#4ee1c2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M36 18 Q44 24 44 35 Q44 46 36 52 Q28 46 28 35 Q28 24 36 18Z"/><line x1="36" y1="18"
+ x2="36" y2="10"/><path d="M30 10 Q36 5 42 10"/><line x1="28" y1="35" x2="44" y2="35"/><path d="M24 52 Q30 58 36 52 Q42 58 48 52"/><path d="M20 60 Q28 66 36 60 Q44 66 52 60"/><line x1="14" y1="72" x2="58" y2="72"/></g></svg>`,
+
+  "Honolulu":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ff6ec7" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 55 Q20 40 28 35 Q36 32 44 35 Q52 40 56 55"/><circle cx="36" cy="28" r="8"/><line
+ x1="36" y1="20" x2="36" y2="14"/><line x1="28" y1="24" x2="24" y2="20"/><line x1="44" y1="24" x2="48" y2="20"/><line x1="14" y1="55" x2="58" y2="55"/><path d="M18 65 Q36 58 54 65"/><line x1="14" y1="72" x2="58" y2="72"/></g></svg>`,
+
+  // MIDDLE EAST
+
+  "Jerusalem":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#ffc857" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="22" y="38" width="28" height="34" rx="0.5"/><path d="M22 38 Q36 24 50 38"/><line
+ x1="36" y1="24" x2="36" y2="14"/><line x1="30" y1="20" x2="42" y2="20"/><rect x="30" y="52" width="12" height="16" rx="0.5"/><rect x="24" y="44" width="6" height="8" rx="0.5"/><rect x="42" y="44" width="6" height="8" rx="0.5"/><line x1="18" y1="72" x2="54"
+ y2="72"/></g></svg>`,
+
+  "Petra":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#f97316" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="16" y1="72" x2="56" y2="72"/><rect x="24" y="44" width="24" height="28" rx="0.5"/><path
+ d="M24 44 Q36 28 48 44"/><path d="M28 44 Q36 32 44 44"/><line x1="20" y1="44" x2="20" y2="72"/><line x1="52" y1="44" x2="52" y2="72"/><rect x="30" y="56" width="12" height="14" rx="0.5"/><line x1="24" y1="54" x2="28" y2="54"/><line x1="44" y1="54" x2="48"
+ y2="54"/></g></svg>`,
+
+  "Muscat":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#4ee1c2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="24" y="42" width="24" height="30" rx="0.5"/><path d="M24 42 Q36 26 48 42"/><path
+ d="M28 42 Q36 30 44 42"/><circle cx="36" cy="32" r="5"/><line x1="36" y1="26" x2="36" y2="18"/><path d="M32 18 Q36 12 40 18"/><rect x="30" y="54" width="12" height="14" rx="0.5"/><line x1="18" y1="72" x2="54" y2="72"/></g></svg>`,
+
+  "Doha":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#7b9dff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="20" y1="72" x2="20" y2="40"/><line x1="30" y1="72" x2="30" y2="28"/><line x1="42"
+ y1="72" x2="42" y2="20"/><line x1="52" y1="72" x2="52" y2="32"/><path d="M20 40 Q25 36 30 28"/><path d="M30 28 Q36 22 42 20"/><path d="M42 20 Q47 24 52 32"/><line x1="16" y1="72" x2="56" y2="72"/></g></svg>`,
+
+  // WILD CARDS
+
+  "Easter Island":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="28" y="50" width="16" height="22" rx="0.5"/><path d="M24 50 Q36 42 48
+ 50"/><path d="M26 42 Q36 30 46 42"/><rect x="30" y="30" width="12" height="12" rx="1"/><path d="M28 30 Q36 22 44 30"/><line x1="32" y1="22" x2="40" y2="22"/><line x1="18" y1="72" x2="54" y2="72"/></g></svg>`,
+
+  "Maldives":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#4ee1c2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 55 Q36 42 52 55"/><path d="M24 60 Q36 50 48 60"/><line x1="14" y1="68"
+ x2="58" y2="68"/><path d="M28 55 L28 68"/><path d="M44 55 L44 68"/><line x1="36" y1="42" x2="36" y2="26"/><path d="M36 26 Q42 30 48 26 Q44 36 36 38"/><line x1="14" y1="72" x2="58" y2="72"/></g></svg>`,
+
+  "Svalbard":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#7b9dff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 55 Q20 38 36 32 Q52 38 58 55"/><path d="M20 55 Q26 42 36 38 Q46 42 52 55"/><path
+ d="M28 55 Q32 46 36 44 Q40 46 44 55"/><line x1="36" y1="32" x2="36" y2="20"/><path d="M30 24 L36 18 L42 24"/><line x1="12" y1="55" x2="60" y2="55"/><line x1="12" y1="72" x2="60" y2="72"/></g></svg>`,
+
+  "Galápagos":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="36" cy="45" rx="18" ry="14"/><path d="M30 31 Q30 22 36 20 Q42 22 42 31"/><path
+ d="M36 59 L36 68"/><path d="M30 66 Q36 70 42 66"/><path d="M18 50 L10 54"/><path d="M54 50 L62 54"/><circle cx="30" cy="42" r="2"/><line x1="14" y1="72" x2="58" y2="72"/></g></svg>`,
+
+  "Faroe Islands":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#a78bfa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 60 Q16 40 24 35 L24 72"/><path d="M24 35 Q30 28 36 30 Q42 28 48 35
+ L48 72"/><path d="M48 35 Q54 40 58 60"/><line x1="24" y1="52" x2="48" y2="52"/><line x1="36" y1="30" x2="36" y2="18"/><path d="M32 18 Q36 12 40 18"/><line x1="12" y1="72" x2="60" y2="72"/></g></svg>`,
+
+  "Patagonia":`<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#f97316" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 72 Q18 50 28 38 Q36 30 36 20"/><path d="M36 20 Q36 30 44 38 Q54 50 58
+ 72"/><line x1="36" y1="20" x2="36" y2="12"/><path d="M32 12 L36 6 L40 12"/><path d="M24 55 Q36 48 48 55"/><path d="M20 65 Q36 56 52 65"/><line x1="12" y1="72" x2="60" y2="72"/></g></svg>`,
+
+};
+
+
+
+
+function getCardBackSVG(){
+
+  if(!currentDest) return LANDMARKS["Paris"];
+
+  return LANDMARKS[currentDest.name] || `<svg viewBox="0 0 72 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#7de8d4" stroke-width="1.2"><path d="M36 20 L50 65 L14 42 L58 42 L22 65Z"/></g></svg>`;
+
+}
+
+
+
+
+function cardEl(card){
+
+  const el=document.createElement('div');
+
+  el.className='card '+(card.faceUp?(isRed(card.suit)?'red':'black face-up'):'face-down');
+
+  if(card.faceUp){
+
+    el.innerHTML=`<span class="rank">${card.rank}</span><span class="suit-tl">${card.suit}</span><span class="suit-center">${card.suit}</span><span class="rank-br">${card.rank}</span>`;
+
+  } else {
+
+    const cityName=currentDest?currentDest.name.toUpperCase():'';
+
+    el.innerHTML=`<span class="card-back-svg">${getCardBackSVG()}</span><span class="card-back-city">${cityName}</span>`;
+
+  }
+
+  return el;
+
+}
+
+
+
+
+// ══════════════════════════════════════════
+
+// MOVES
+
+// ══════════════════════════════════════════
+
+function saveHistory(){
+
+  history.push({
+
+    stock:stock.map(c=>({...c})),
+
+    waste:waste.map(c=>({...c})),
+
+    foundations:foundations.map(f=>f.map(c=>({...c}))),
+
+    tableau:tableau.map(col=>col.map(c=>({...c}))),
+
+    moveCount,seconds
+
+  });
+
+  if(history.length>50) history.shift();
+
+}
+
+
+
+
+function undoMove(){
+
+  if(history.length===0){toast('Nothing to undo','var(--muted)');return;}
+
+  const s=history.pop();
+
+  stock=s.stock; waste=s.waste; foundations=s.foundations; tableau=s.tableau;
+
+  moveCount=s.moveCount; seconds=s.seconds;
+
+  selectedCard=null;
+
+  renderTable();
+
+}
+
+
+
+
+function drawFromStock(){
+
+  saveHistory();
+
+  const drawCount=DIFF_DRAW[currentDiff]||1;
+
+  for(let i=0;i<drawCount;i++){
+
+    if(stock.length===0) break;
+
+    const c=stock.pop();
+
+    c.faceUp=true;
+
+    waste.push(c);
+
+  }
+
+  moveCount++;
+
+  selectedCard=null;
+
+  renderTable();
+
+}
+
+
+
+
+function resetStock(){
+
+  if(stock.length>0) return;
+
+  saveHistory();
+
+  stock=waste.reverse().map(c=>({...c,faceUp:false}));
+
+  waste=[];
+
+  moveCount++;
+
+  renderTable();
+
+}
+
+
+
+
+function selectCard(sel){
+
+  if(selectedCard&&selectedCard.from===sel.from&&selectedCard.colIdx===sel.colIdx&&selectedCard.cardIdx===sel.cardIdx){
+
+    selectedCard=null;
+
+  } else {
+
+    selectedCard=sel;
+
+  }
+
+  renderTable();
+
+}
+
+
+
+
+function tryAutoFoundation(card, source, sourceCol, sourceIdx){
+
+  // Try to place a single card onto any foundation slot automatically
+
+  for(let i=0;i<4;i++){
+
+    if(canPlaceOnFoundation(card,i)){
+
+      saveHistory();
+
+      if(source==='waste') waste.pop();
+
+      else if(source==='tableau'){
+
+        tableau[sourceCol].splice(sourceIdx);
+
+        const src=tableau[sourceCol];
+
+        if(src.length>0&&!src[src.length-1].faceUp) src[src.length-1].faceUp=true;
+
+      }
+
+      foundations[i].push(card);
+
+      moveCount++;
+
+      selectedCard=null;
+
+      renderTable();
+
+      checkWin();
+
+      return true;
+
+    }
+
+  }
+
+  return false;
+
+}
+
+
+
+
+function handleTableauClick(col,idx){
+
+  const card=tableau[col][idx];
+
+  if(!card.faceUp){
+
+    if(idx===tableau[col].length-1){
+
+      saveHistory();
+
+      card.faceUp=true;
+
+      moveCount++;
+
+      selectedCard=null;
+
+      renderTable();
+
+    }
+
+    return;
+
+  }
+
+  // If something is already selected, try to drop it here
+
+  if(selectedCard){
+
+    if(selectedCard.from==='tableau'&&selectedCard.colIdx===col) {
+
+      selectedCard=null; renderTable(); return;
+
+    }
+
+    dropOnTableau(col);
+
+    return;
+
+  }
+
+  // Nothing selected yet — if it's the bottom card of the column, try auto-foundation first
+
+  if(idx===tableau[col].length-1){
+
+    if(tryAutoFoundation(card,'tableau',col,idx)) return;
+
+  }
+
+  // Otherwise select it (or the stack from here down)
+
+  const cards=tableau[col].slice(idx);
+
+  selectCard({from:'tableau',colIdx:col,cardIdx:idx,cards});
+
+}
+
+
+
+
+function canPlaceOnTableau(card, targetCol){
+
+  const pile=tableau[targetCol];
+
+  if(pile.length===0) return rankVal(card.rank)===12; // King on empty
+
+  const top=pile[pile.length-1];
+
+  if(!top.faceUp) return false;
+
+  return rankVal(card.rank)===rankVal(top.rank)-1 && isRed(card.suit)!==isRed(top.suit);
+
+}
+
+
+
+
+function dropOnTableau(col){
+
+  if(!selectedCard){return;}
+
+  const cards=selectedCard.cards;
+
+  if(!canPlaceOnTableau(cards[0],col)){
+
+    toast("Can't place there",'var(--muted)'); selectedCard=null; renderTable(); return;
+
+  }
+
+  saveHistory();
+
+  // Remove from source
+
+  if(selectedCard.from==='waste'){
+
+    waste.pop();
+
+  } else if(selectedCard.from==='tableau'){
+
+    tableau[selectedCard.colIdx].splice(selectedCard.cardIdx);
+
+    // Flip top if face-down
+
+    const src=tableau[selectedCard.colIdx];
+
+    if(src.length>0&&!src[src.length-1].faceUp) src[src.length-1].faceUp=true;
+
+  } else if(selectedCard.from==='foundation'){
+
+    foundations[selectedCard.colIdx].pop();
+
+  }
+
+  tableau[col].push(...cards);
+
+  moveCount++;
+
+  selectedCard=null;
+
+  renderTable();
+
+  checkWin();
+
+}
+
+
+
+
+function canPlaceOnFoundation(card,fIdx){
+
+  const pile=foundations[fIdx];
+
+  if(pile.length===0) return card.rank==='A';
+
+  const top=pile[pile.length-1];
+
+  return top.suit===card.suit && rankVal(card.rank)===rankVal(top.rank)+1;
+
+}
+
+
+
+
+function moveToFoundation(fIdx){
+
+  if(!selectedCard||selectedCard.cards.length>1){
+
+    // try auto from waste top
+
+    if(!selectedCard&&waste.length>0){
+
+      const c=waste[waste.length-1];
+
+      for(let i=0;i<4;i++){
+
+        if(canPlaceOnFoundation(c,i)){
+
+          saveHistory(); foundations[i].push(waste.pop());
+
+          moveCount++; renderTable(); checkWin(); return;
+
+        }
+
+      }
+
+    }
+
+    return;
+
+  }
+
+  const card=selectedCard.cards[0];
+
+  if(!canPlaceOnFoundation(card,fIdx)){toast("Can't place there",'var(--muted)');selectedCard=null;renderTable();return;}
+
+  saveHistory();
+
+  if(selectedCard.from==='waste') waste.pop();
+
+  else if(selectedCard.from==='tableau'){
+
+    tableau[selectedCard.colIdx].pop();
+
+    const src=tableau[selectedCard.colIdx];
+
+    if(src.length>0&&!src[src.length-1].faceUp) src[src.length-1].faceUp=true;
+
+  }
+
+  foundations[fIdx].push(card);
+
+  moveCount++; selectedCard=null; renderTable(); checkWin();
+
+}
+
+
+
+
+function autoFoundation(){
+
+  let moved=true;
+
+  while(moved){
+
+    moved=false;
+
+    // from waste
+
+    if(waste.length>0){
+
+      const c=waste[waste.length-1];
+
+      for(let i=0;i<4;i++){if(canPlaceOnFoundation(c,i)){saveHistory();foundations[i].push(waste.pop());moveCount++;moved=true;break;}}
+
+    }
+
+    // from tableau tops
+
+    for(let col=0;col<7;col++){
+
+      const pile=tableau[col];
+
+      if(pile.length>0&&pile[pile.length-1].faceUp){
+
+        const c=pile[pile.length-1];
+
+        for(let i=0;i<4;i++){
+
+          if(canPlaceOnFoundation(c,i)){
+
+            saveHistory();foundations[i].push(pile.pop());
+
+            if(pile.length>0&&!pile[pile.length-1].faceUp) pile[pile.length-1].faceUp=true;
+
+            moveCount++;moved=true;break;
+
+          }
+
+        }
+
+      }
+
+    }
+
+  }
+
+  renderTable(); checkWin();
+
+}
+
+
+
+
+function checkWin(){
+
+  if(foundations.every(f=>f.length===13)){
+
+    clearInterval(timerInterval);
+
+    gameWon=true;
+
+    if(currentDest&&!stamped[currentDest.name]){
+
+      stamped[currentDest.name]=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+      saveStamped();
+
+    }
+
+    setTimeout(()=>showScreen('win'),600);
+
+  }
+
+}
+
+
+
+
+// ══════════════════════════════════════════
+
+// DIFFICULTY
+
+// ══════════════════════════════════════════
+
+function setDiff(d,btn){
+
+  currentDiff=d;
+
+  document.querySelectorAll('.dpill').forEach(p=>p.classList.remove('active'));
+
+  btn.classList.add('active');
+
+}
+
+
+
+
+// ══════════════════════════════════════════
+
+// RENDER PICKER
+
+// ══════════════════════════════════════════
+
+function renderPicker(){
+
+  const tabsEl=document.getElementById('pick-tabs');
+
+  tabsEl.innerHTML='';
+
+  REGIONS.forEach((r,i)=>{
+
+    const t=document.createElement('button');
+
+    t.className='rtab'+(i===currentPickRegion?' active':'');
+
+    t.textContent=r.icon+' '+r.name;
+
+    t.style.color=r.color;
+
+    if(i===currentPickRegion) t.style.borderColor=r.color;
+
+    t.onclick=()=>{currentPickRegion=i;renderPicker();};
+
+    tabsEl.appendChild(t);
+
+  });
+
+
+
+
+  const region=REGIONS[currentPickRegion];
+
+  const grid=document.getElementById('dest-grid');
+
+  grid.innerHTML='';
+
+  region.places.forEach(p=>{
+
+    const isStamped=!!stamped[p.name];
+
+    const card=document.createElement('div');
+
+    card.className='dest-card '+(isStamped?'stamped':'unlocked');
+
+    card.style.borderColor=region.color;
+
+    card.style.color=region.color;
+
+    card.innerHTML=`
+
+      <div class="dest-icon">${p.icon}</div>
+
+      <div class="dest-name" style="color:var(--text)">${p.name}</div>
+
+      <div class="dest-diff" style="color:${region.color}">${p.diff.toUpperCase()}</div>
+
+      ${isStamped?`<div class="stamp-badge" style="color:${region.color}">✦</div>`:''}
+
+    `;
+
+    card.onclick=()=>{currentDest=p;startGame(p);};
+
+    grid.appendChild(card);
+
+  });
+
+
+
+
+  const regionStamped=region.places.filter(p=>stamped[p.name]).length;
+
+  document.getElementById('pick-footer').textContent=
+
+    `${regionStamped} of ${region.places.length} ${region.name} destinations stamped · ${totalStamped()} of ${ALL_PLACES.length} total`;
+
+}
+
+
+
+
+// ══════════════════════════════════════════
+
+// RENDER PASSPORT
+
+// ══════════════════════════════════════════
+
+function renderPassport(){
+
+  const total=totalStamped();
+
+  const all=ALL_PLACES.length;
+
+  document.getElementById('passport-count').textContent=`${total} / ${all} stamped`;
+
+  const pct=Math.round(total/all*100);
+
+  document.getElementById('global-progress').style.width=pct+'%';
+
+  document.getElementById('progress-pct').textContent=pct+'%';
+
+
+
+
+  const tabsEl=document.getElementById('passport-tabs');
+
+  tabsEl.innerHTML='';
+
+  REGIONS.forEach((r,i)=>{
+
+    const rs=r.places.filter(p=>stamped[p.name]).length;
+
+    const t=document.createElement('button');
+
+    t.className='pregion-tab'+(i===currentPassportRegion?' active':'');
+
+    t.textContent=r.icon+' '+r.name+' '+rs+'/'+r.places.length;
+
+    t.style.color=r.color;
+
+    if(i===currentPassportRegion) t.style.borderColor=r.color;
+
+    t.onclick=()=>{currentPassportRegion=i;renderPassport();};
+
+    tabsEl.appendChild(t);
+
+  });
+
+
+
+
+  const region=REGIONS[currentPassportRegion];
+
+  const grid=document.getElementById('passport-grid');
+
+  grid.innerHTML='';
+
+  region.places.forEach(p=>{
+
+    const isStamped=!!stamped[p.name];
+
+    const div=document.createElement('div');
+
+    div.className='pstamp '+(isStamped?'stamped':'locked');
+
+    div.style.borderColor=region.color;
+
+    div.style.background=isStamped?'var(--surface2)':'transparent';
+
+    div.innerHTML=`
+
+      <div class="ps-aicon">${p.icon}</div>
+
+      <div class="ps-name" style="color:${isStamped?'var(--text)':'var(--muted)'}">${p.name}</div>
+
+      ${isStampead?`<div class="ps-date" style="color:${region.color}">${stamped[p.name]}</div>`:'<div class="ps-date">locked</div>'}
+
+    `;
+
+    if(isStamped) div.onclick=()=>{currentDest=p;startGame(p);};
+
+    grid.appendChild(div);
+
+  });
+
+}
+
+
+
+
+// ════════════════a══════════════════════════
+
+// RENDER WIN
+
+// ══════════════════════════════════════════
+
+function renderWin(){
+
+  if(!currentDest) return;
+
+  const r=regionOf(currentDest.name);
+
+  document.getElementById('win-stamp-circle').style.borderColor=r?r.color:'var(--pink)';
+
+  document.getElementById('win-icon').textContent=currentDest.icon;
+
+  document.getElementById('win-title').textContent='Stamped!';
+
+  document.getElementById('win-sub').textContent=`You've visited ${currentDest.name}`;
+
+  document.getElementById('win-moves').textContent=moveCount;
+
+  document.getElementById('win-time').textContent=fmtTime(seconds);
+
+  document.getElementById('win-total').textContent=totalStamped();
+
+}
+
+
+
+
+// ══════════════════════════════════════════
+
+// KEYBOARD
+
+// ══════════════════════════════════════════
+
+document.addEventListener('keydown',e=>{
+
+  if(e.key==='z'&&(e.ctrlKey||e.metaKey)) undoMove();
+
+  if(e.key==='a') autoFoundation();
+
+  if(e.key==='Escape'){selectedCard=null;renderTable();}
+
+});
+
+
+
+
+// ══════════════════════════════════════════
+
+// INIT
+
+// ══════════════════════════════════════════
+
+renderPicker();
+
+</script>
+
+</body>
