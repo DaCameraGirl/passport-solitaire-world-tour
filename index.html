@@ -357,6 +357,12 @@ body{background:#080b16;color:#f1eef8}
 .dest-grid{max-width:1120px;grid-template-columns:repeat(auto-fill,minmax(165px,1fr))!important;gap:14px!important}.dest-card{min-height:178px;padding:10px!important;text-align:left!important;border-radius:14px!important;border:1px solid rgba(255,255,255,0.13)!important;background:linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.035))!important;color:#f2eefb!important;box-shadow:0 14px 36px rgba(0,0,0,0.18)}.dest-card:hover.unlocked,.dest-card:hover.stamped{transform:translateY(-2px)!important;background:rgba(255,255,255,0.085)!important;border-color:rgba(125,232,212,0.32)!important}.city-postcard{position:relative;height:108px;margin-bottom:10px;overflow:hidden;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)),linear-gradient(150deg,rgba(125,232,212,0.16),rgba(255,200,87,0.08));border:1px solid rgba(255,255,255,0.10)}.city-postcard:after{content:"";position:absolute;left:-20%;right:-20%;bottom:-26px;height:58px;border-radius:50%;background:rgba(0,0,0,0.22)}.mini-landmark{position:absolute;inset:6px 8px 2px auto;width:82px;height:112px;opacity:0.9}.mini-landmark svg{width:100%;height:100%}.mini-landmark svg *{stroke:var(--city-color)!important}.city-code{position:absolute;left:10px;top:10px;display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--city-color);border-radius:50%;color:var(--city-color);font-family:'Space Mono',monospace;font-size:13px;font-weight:700;background:rgba(8,11,22,0.42)}.dest-card .dest-icon{display:none}.dest-card .dest-name{font-size:15px!important;line-height:1.2;color:#fff!important}.dest-meta{margin-top:5px;color:#aeb6c9;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.5px}.dest-card .dest-diff{display:none}.dest-card .stamp-badge{top:10px!important;right:10px!important;padding:3px 6px;border:1px solid currentColor;border-radius:999px;background:rgba(8,11,22,0.68);font-family:'Space Mono',monospace;font-size:8px!important;letter-spacing:.8px}.pick-footer{max-width:1120px;margin:0 auto;color:#9da5b8!important;text-align:left!important}
 #screen-game{background:#06100e!important;color:#f3efff!important;min-height:100vh}.game-bar{background:#0b0f1c!important;border-bottom:1px solid rgba(255,255,255,0.12)!important;color:#f3efff!important;min-height:64px;box-shadow:0 10px 30px rgba(0,0,0,0.24)}.game-bar .dest-title,.game-bar .stat-val{color:#f8f3ff!important}.game-bar .dest-label,.game-bar .stat-label{color:#a9b0c2!important}.table-area{background:linear-gradient(160deg,#0b3a2d 0%,#08261f 58%,#061915 100%)!important;border-radius:0!important;min-height:calc(100vh - 64px)!important;padding:18px!important;overflow:auto!important}.table-area>div[style*="display:flex"]{min-width:calc((var(--card-w)*7) + 128px);gap:24px!important}.stock-waste,.foundations-row{gap:12px!important}.tableau-row{justify-content:flex-start!important;gap:12px!important;min-width:calc((var(--card-w)*7) + 72px);padding:0 4px 40px}.card-stack{width:var(--card-w)!important}.pile-slot,.empty-foundation{width:var(--card-w)!important;height:var(--card-h)!important;border-radius:var(--card-radius)!important}.card{width:var(--card-w)!important;height:var(--card-h)!important;border-radius:var(--card-radius)!important}.card.face-up{background:#fff!important;border:1px solid #ded7ef!important;box-shadow:0 5px 14px rgba(0,0,0,0.38)!important}.card.face-up.red .rank,.card.face-up.red .suit-center,.card.face-up.red .suit-tl,.card.face-up.red .rank-br{color:#c0002a!important}.card.face-up.black .rank,.card.face-up.black .suit-center,.card.face-up.black .suit-tl,.card.face-up.black .rank-br{color:#0a0820!important}.card .rank,.card .rank-br{font-size:clamp(16px,2.2vw,22px)!important}.card .suit-tl{font-size:clamp(13px,1.8vw,18px)!important}.card .suit-center{font-size:clamp(32px,4.5vw,50px)!important}.card.face-down .card-back-city{font-size:clamp(7px,1vw,10px)!important}.table-watermark{font-size:clamp(96px,18vw,220px)!important;right:18px!important;bottom:18px!important;opacity:0.025!important;filter:none!important}.btn{background:#171b31!important;border-color:rgba(255,255,255,0.16)!important}.btn.accent{border-color:#7de8d4!important;color:#7de8d4!important}
 @media(max-width:760px){:root{--card-w:76px}.game-bar{align-items:flex-start}.table-area{padding:12px!important}.tableau-row{gap:8px!important}.stock-waste,.foundations-row{gap:8px!important}.dest-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))!important}.city-postcard{height:96px}.pick-header h1{font-size:38px}}
+
+/* Drag interaction polish */
+.card{touch-action:none}
+.drag-ghost{position:fixed;left:0;top:0;z-index:10000;pointer-events:none;filter:drop-shadow(0 18px 24px rgba(0,0,0,0.42));transform-origin:left top}
+.drag-ghost .card{position:absolute!important;left:0!important}
+.pile-slot.drop-hover,.card-stack.drop-hover{outline:3px solid rgba(125,232,212,0.72);outline-offset:3px;background:rgba(125,232,212,0.10)!important}
 </style>
 
 </head>
@@ -975,9 +981,105 @@ function fmtTime(s){
 // ══════════════════════════════════════════
 
 let selectedCard=null; // {from,colIdx,cardIdx,cards}
+let dragState=null;
+let suppressNextClick=false;
 
 
 
+
+
+function consumeSuppressClick(){
+  if(!suppressNextClick) return false;
+  suppressNextClick=false;
+  return true;
+}
+
+function beginCardDrag(e,sel){
+  if(e.button!==undefined&&e.button!==0) return;
+  if(!sel.cards||sel.cards.length===0||!sel.cards[0].faceUp) return;
+  dragState={sel,startX:e.clientX,startY:e.clientY,x:e.clientX,y:e.clientY,ghost:null,hover:null,moved:false};
+  document.addEventListener('pointermove',handleCardDragMove);
+  document.addEventListener('pointerup',handleCardDragEnd,{once:true});
+  document.addEventListener('pointercancel',cancelCardDrag,{once:true});
+}
+
+function buildDragGhost(sel){
+  const ghost=document.createElement('div');
+  ghost.className='drag-ghost';
+  sel.cards.forEach((card,idx)=>{
+    const el=cardEl(card);
+    el.style.top=(idx*28)+'px';
+    ghost.appendChild(el);
+  });
+  document.body.appendChild(ghost);
+  return ghost;
+}
+
+function handleCardDragMove(e){
+  if(!dragState) return;
+  const dx=e.clientX-dragState.startX;
+  const dy=e.clientY-dragState.startY;
+  if(!dragState.moved&&Math.hypot(dx,dy)<6) return;
+  if(!dragState.ghost){
+    dragState.ghost=buildDragGhost(dragState.sel);
+    dragState.moved=true;
+  }
+  e.preventDefault();
+  dragState.x=e.clientX;
+  dragState.y=e.clientY;
+  dragState.ghost.style.transform=`translate(${e.clientX+12}px,${e.clientY+12}px)`;
+  const target=findDropTarget(e.clientX,e.clientY);
+  setDropHover(target);
+}
+
+function handleCardDragEnd(e){
+  if(!dragState) return;
+  const sel=dragState.sel;
+  const wasMoved=dragState.moved;
+  const target=findDropTarget(e.clientX,e.clientY);
+  cleanupDrag();
+  if(!wasMoved) return;
+  suppressNextClick=true;
+  if(!target){toast('Drop on a column or foundation','var(--muted)');return;}
+  dropDraggedSelection(sel,target);
+}
+
+function cancelCardDrag(){
+  cleanupDrag();
+}
+
+function cleanupDrag(){
+  if(dragState&&dragState.ghost) dragState.ghost.remove();
+  setDropHover(null);
+  document.removeEventListener('pointermove',handleCardDragMove);
+  dragState=null;
+}
+
+function setDropHover(target){
+  if(dragState&&dragState.hover&&dragState.hover!==target) dragState.hover.classList.remove('drop-hover');
+  if(target) target.classList.add('drop-hover');
+  if(dragState) dragState.hover=target;
+}
+
+function findDropTarget(x,y){
+  const targets=document.elementsFromPoint(x,y);
+  for(const el of targets){
+    const target=el.closest&&el.closest('[data-drop-type]');
+    if(target) return target;
+  }
+  return null;
+}
+
+function dropDraggedSelection(sel,target){
+  selectedCard=sel;
+  if(target.dataset.dropType==='tableau'){
+    dropOnTableau(Number(target.dataset.dropIndex));
+    return;
+  }
+  if(target.dataset.dropType==='foundation'){
+    moveToFoundation(Number(target.dataset.dropIndex));
+  }
+}
 
 function renderTable(){
 
@@ -1048,7 +1150,11 @@ function renderStockWaste(){
 
     ce.style.position='absolute';
 
+    ce.onpointerdown=(e)=>beginCardDrag(e,{from:'waste',colIdx:-1,cardIdx:waste.length-1,cards:[top]});
+
     ce.onclick=()=>{
+
+      if(consumeSuppressClick()) return;
 
       if(!selectedCard){
 
@@ -1084,6 +1190,8 @@ function renderFoundations(){
     const slot=document.createElement('div');
 
     slot.className='pile-slot foundation';
+    slot.dataset.dropType='foundation';
+    slot.dataset.dropIndex=String(i);
 
     const pile=foundations[i];
 
@@ -1131,6 +1239,8 @@ function renderTableau(){
     const stack=document.createElement('div');
 
     stack.className='card-stack';
+    stack.dataset.dropType='tableau';
+    stack.dataset.dropIndex=String(col);
 
     const cards=tableau[col];
 
@@ -1159,7 +1269,9 @@ function renderTableau(){
 
         if(isSel) ce.classList.add('selected');
 
-        ce.onclick=(e)=>{e.stopPropagation();handleTableauClick(col,idx);};
+        ce.onpointerdown=(e)=>beginCardDrag(e,{from:'tableau',colIdx:col,cardIdx:idx,cards:tableau[col].slice(idx)});
+
+        ce.onclick=(e)=>{e.stopPropagation();if(consumeSuppressClick()) return;handleTableauClick(col,idx);};
 
         offset+=28;
 
