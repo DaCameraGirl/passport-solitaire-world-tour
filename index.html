@@ -1091,7 +1091,8 @@ function beginCardDrag(e,sel){
   e.stopPropagation();
   suppressNextClick=false;
   if(dragState) cleanupDrag();
-  dragState={sel,startX:e.clientX,startY:e.clientY,x:e.clientX,y:e.clientY,ghost:null,hover:null,moved:false,source:e.currentTarget,pointerId:e.pointerId};
+  const rect=e.currentTarget.getBoundingClientRect();
+  dragState={sel,startX:e.clientX,startY:e.clientY,x:e.clientX,y:e.clientY,grabX:e.clientX-rect.left,grabY:e.clientY-rect.top,ghost:null,hover:null,moved:false,source:e.currentTarget,pointerId:e.pointerId};
   selectedCard=null;
   if(e.currentTarget.setPointerCapture&&e.pointerId!==undefined){
     try{e.currentTarget.setPointerCapture(e.pointerId);}catch(_err){}
@@ -1126,8 +1127,8 @@ function handleCardDragMove(e){
   e.preventDefault();
   dragState.x=e.clientX;
   dragState.y=e.clientY;
-  dragState.ghost.style.transform=`translate(${e.clientX+12}px,${e.clientY+12}px)`;
-  const target=findDropTarget(e.clientX,e.clientY);
+  dragState.ghost.style.transform=`translate(${e.clientX-dragState.grabX}px,${e.clientY-dragState.grabY}px)`;
+  const target=findDropTarget(e.clientX,e.clientY,dragState.sel);
   setDropHover(target);
 }
 
@@ -1135,7 +1136,7 @@ function handleCardDragEnd(e){
   if(!dragState) return;
   const sel=dragState.sel;
   const wasMoved=dragState.moved;
-  const target=findDropTarget(e.clientX,e.clientY);
+  const target=findDropTarget(e.clientX,e.clientY,sel);
   cleanupDrag();
   if(!wasMoved) return;
   suppressCardClickBriefly();
@@ -1161,15 +1162,47 @@ function setDropHover(target){
   if(dragState) dragState.hover=target;
 }
 
-function findDropTarget(x,y){
+function dropTargetAllowsSelection(target,sel){
+  if(!target||!sel||!sel.cards||sel.cards.length===0) return true;
+  const card=sel.cards[0];
+  if(target.dataset.dropType==='tableau'){
+    return canPlaceOnTableau(card,Number(target.dataset.dropIndex));
+  }
+  if(target.dataset.dropType==='foundation'){
+    return sel.cards.length===1&&canPlaceOnFoundation(card,Number(target.dataset.dropIndex));
+  }
+  return true;
+}
+
+function expandedRectScore(rect,x,y,margin){
+  if(x<rect.left-margin||x>rect.right+margin||y<rect.top-margin||y>rect.bottom+margin) return Infinity;
+  const dx=x<rect.left?rect.left-x:(x>rect.right?x-rect.right:0);
+  const dy=y<rect.top?rect.top-y:(y>rect.bottom?y-rect.bottom:0);
+  return Math.hypot(dx,dy);
+}
+
+function findNearestDropTarget(x,y,sel){
+  let best=null;
+  let bestScore=Infinity;
+  document.querySelectorAll('[data-drop-type]').forEach(target=>{
+    if(!dropTargetAllowsSelection(target,sel)) return;
+    const margin=target.dataset.dropType==='tableau'?52:28;
+    const score=expandedRectScore(target.getBoundingClientRect(),x,y,margin);
+    if(score<bestScore){best=target;bestScore=score;}
+  });
+  return best;
+}
+
+function findDropTarget(x,y,sel=null){
+  let exact=null;
   const targets=document.elementsFromPoint(x,y);
   for(const el of targets){
     const target=el.closest&&el.closest('[data-drop-type]');
-    if(target) return target;
+    if(target){exact=target;break;}
   }
-  return null;
+  if(exact&&dropTargetAllowsSelection(exact,sel)) return exact;
+  return findNearestDropTarget(x,y,sel)||exact;
 }
-
 function dropDraggedSelection(sel,target){
   selectedCard=sel;
   if(target.dataset.dropType==='tableau'){
