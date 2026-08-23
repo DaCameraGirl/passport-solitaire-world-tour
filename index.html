@@ -363,6 +363,13 @@ body{background:#080b16;color:#f1eef8}
 .drag-ghost{position:fixed;left:0;top:0;z-index:10000;pointer-events:none;filter:drop-shadow(0 18px 24px rgba(0,0,0,0.42));transform-origin:left top}
 .drag-ghost .card{position:absolute!important;left:0!important}
 .pile-slot.drop-hover,.card-stack.drop-hover{outline:3px solid rgba(125,232,212,0.72);outline-offset:3px;background:rgba(125,232,212,0.10)!important}
+
+/* Table spread + direct drag tuning */
+.table-area{padding-inline:clamp(20px,4vw,60px)!important}
+.tableau-row{width:100%!important;max-width:1280px!important;margin:8px auto 0!important;justify-content:space-between!important;align-items:flex-start!important;gap:clamp(10px,2vw,28px)!important}
+.table-area>div[style*="display:flex"]{width:100%!important;max-width:1280px!important;margin-left:auto!important;margin-right:auto!important;min-width:calc((var(--card-w)*7) + 96px)!important}
+.stock-waste,.foundations-row{gap:clamp(10px,1.4vw,18px)!important}.card.dragging{opacity:.38!important}.drag-ghost{cursor:grabbing}.card{cursor:grab}.card:active{cursor:grabbing}
+@media(max-width:900px){.tableau-row{justify-content:flex-start!important}.table-area{padding-inline:14px!important}}
 </style>
 
 </head>
@@ -997,7 +1004,12 @@ function consumeSuppressClick(){
 function beginCardDrag(e,sel){
   if(e.button!==undefined&&e.button!==0) return;
   if(!sel.cards||sel.cards.length===0||!sel.cards[0].faceUp) return;
-  dragState={sel,startX:e.clientX,startY:e.clientY,x:e.clientX,y:e.clientY,ghost:null,hover:null,moved:false};
+  e.stopPropagation();
+  dragState={sel,startX:e.clientX,startY:e.clientY,x:e.clientX,y:e.clientY,ghost:null,hover:null,moved:false,source:e.currentTarget,pointerId:e.pointerId};
+  selectedCard=null;
+  if(e.currentTarget.setPointerCapture&&e.pointerId!==undefined){
+    try{e.currentTarget.setPointerCapture(e.pointerId);}catch(_err){}
+  }
   document.addEventListener('pointermove',handleCardDragMove);
   document.addEventListener('pointerup',handleCardDragEnd,{once:true});
   document.addEventListener('pointercancel',cancelCardDrag,{once:true});
@@ -1019,7 +1031,7 @@ function handleCardDragMove(e){
   if(!dragState) return;
   const dx=e.clientX-dragState.startX;
   const dy=e.clientY-dragState.startY;
-  if(!dragState.moved&&Math.hypot(dx,dy)<6) return;
+  if(!dragState.moved&&Math.hypot(dx,dy)<3) return;
   if(!dragState.ghost){
     dragState.ghost=buildDragGhost(dragState.sel);
     dragState.moved=true;
