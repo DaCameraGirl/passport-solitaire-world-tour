@@ -368,7 +368,22 @@ body{background:#080b16;color:#f1eef8}
 .table-area{padding-inline:clamp(20px,4vw,60px)!important}
 .tableau-row{width:100%!important;max-width:1280px!important;margin:8px auto 0!important;justify-content:space-between!important;align-items:flex-start!important;gap:clamp(10px,2vw,28px)!important}
 .table-area>div[style*="display:flex"]{width:100%!important;max-width:1280px!important;margin-left:auto!important;margin-right:auto!important;min-width:calc((var(--card-w)*7) + 96px)!important}
-.stock-waste,.foundations-row{gap:clamp(10px,1.4vw,18px)!important}.card.dragging{opacity:.38!important}.drag-ghost{cursor:grabbing}.card{cursor:grab}.card:active{cursor:grabbing}
+.stock-waste,.foundations-row{gap:clamp(10px,1.4vw,18px)!important}.card.dragging{opacity:.38!important}.drag-ghost{cursor:grabbing}.card{cursor:grab}.card:active{cursor:grabbing}.waste-pile{width:calc(var(--card-w) + 48px)!important}.waste-shadow{opacity:.72;pointer-events:none;filter:saturate(.75)}.pile-count{position:absolute;right:6px;bottom:5px;z-index:20;border-radius:999px;background:rgba(8,11,22,.82);border:1px solid rgba(125,232,212,.35);color:#e8e6f0;font:700 11px/1 Space Mono,monospace;padding:3px 6px;pointer-events:none}
+.flight-overlay{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .18s ease;background:radial-gradient(circle at 50% 38%,rgba(125,232,212,.16),rgba(8,11,22,.72) 52%,rgba(8,11,22,.88));overflow:hidden;--flight-color:var(--accent)}
+.flight-overlay.show{opacity:1}
+.flight-route-line{position:absolute;left:8vw;right:8vw;top:48%;height:2px;background:linear-gradient(90deg,transparent,var(--flight-color),transparent);transform:scaleX(0);transform-origin:left center;opacity:.75}
+.flight-overlay.show .flight-route-line{animation:routeDraw 1.15s ease-out forwards}
+.flight-plane{position:absolute;left:-12vw;top:42%;font-size:42px;color:var(--flight-color);filter:drop-shadow(0 10px 22px rgba(0,0,0,.45));transform:rotate(8deg)}
+.flight-overlay.show .flight-plane{animation:flightAcross 1.35s cubic-bezier(.2,.74,.22,1) forwards}
+.boarding-pass{width:min(520px,calc(100vw - 36px));border:1px solid color-mix(in srgb,var(--flight-color) 55%,transparent);border-radius:16px;background:rgba(12,16,31,.92);box-shadow:0 24px 80px rgba(0,0,0,.42);padding:22px 24px;text-align:center;transform:translateY(18px) scale(.96);opacity:0;backdrop-filter:blur(14px)}
+.flight-overlay.show .boarding-pass{animation:boardingPop 1.18s ease forwards}
+.boarding-kicker{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--flight-color);margin-bottom:10px}
+.boarding-dest{font-size:clamp(28px,5vw,48px);font-weight:800;line-height:1;letter-spacing:0;color:#fff;margin-bottom:10px}
+.boarding-copy{color:#c9c4e6;font-size:15px;font-weight:600}.boarding-copy span{color:var(--flight-color)}
+.boarding-icon{font-size:46px;margin-bottom:8px;filter:drop-shadow(0 0 18px color-mix(in srgb,var(--flight-color) 45%,transparent))}
+@keyframes routeDraw{to{transform:scaleX(1)}}
+@keyframes flightAcross{0%{transform:translateX(0) translateY(20px) rotate(8deg)}70%{transform:translateX(74vw) translateY(-20px) rotate(4deg)}100%{transform:translateX(120vw) translateY(-42px) rotate(0deg)}}
+@keyframes boardingPop{0%{opacity:0;transform:translateY(18px) scale(.96)}18%,74%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-12px) scale(.98)}}
 @media(max-width:900px){.tableau-row{justify-content:flex-start!important}.table-area{padding-inline:14px!important}}
 </style>
 
@@ -382,6 +397,17 @@ body{background:#080b16;color:#f1eef8}
 <!-- TOAST -->
 
 <div class="toast" id="toast"></div>
+<!-- FLIGHT BOARDING -->
+<div class="flight-overlay" id="flight-overlay" aria-hidden="true">
+  <div class="flight-route-line"></div>
+  <div class="flight-plane">✈</div>
+  <div class="boarding-pass">
+    <div class="boarding-icon" id="flight-icon">✈</div>
+    <div class="boarding-kicker">DING DING · FIRST CLASS BOARDING</div>
+    <div class="boarding-dest" id="flight-dest">World Tour</div>
+    <div class="boarding-copy">All aboard for <span id="flight-region">Passport Solitaire</span></div>
+  </div>
+</div>
 
 
 
@@ -838,6 +864,45 @@ function toast(msg,color='var(--accent)'){
 
 
 
+let boardingTimer=null;
+let audioCtx=null;
+
+function playBoardingChime(){
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx) return;
+    audioCtx=audioCtx||new Ctx();
+    const now=audioCtx.currentTime;
+    [880,1175,1568].forEach((freq,idx)=>{
+      const osc=audioCtx.createOscillator();
+      const gain=audioCtx.createGain();
+      osc.type='sine';
+      osc.frequency.setValueAtTime(freq,now+idx*.12);
+      gain.gain.setValueAtTime(0,now+idx*.12);
+      gain.gain.linearRampToValueAtTime(.11,now+idx*.12+.015);
+      gain.gain.exponentialRampToValueAtTime(.001,now+idx*.12+.16);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now+idx*.12);
+      osc.stop(now+idx*.12+.18);
+    });
+  }catch(_err){}
+}
+
+function showBoardingFlight(dest){
+  const overlay=document.getElementById('flight-overlay');
+  if(!overlay||!dest) return;
+  const r=regionOf(dest.name);
+  document.getElementById('flight-icon').textContent=dest.icon||'✈';
+  document.getElementById('flight-dest').textContent=dest.name;
+  document.getElementById('flight-region').textContent=r?r.name:'World Tour';
+  overlay.style.setProperty('--flight-color',r?r.color:'var(--accent)');
+  overlay.classList.remove('show');
+  void overlay.offsetWidth;
+  overlay.classList.add('show');
+  playBoardingChime();
+  clearTimeout(boardingTimer);
+  boardingTimer=setTimeout(()=>overlay.classList.remove('show'),1500);
+}
 function showScreen(name){
 
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -964,8 +1029,8 @@ function startGame(dest){
 
 
   showScreen('game');
-
   renderTable();
+  showBoardingFlight(dest);
 
 }
 
@@ -990,6 +1055,7 @@ function fmtTime(s){
 let selectedCard=null; // {from,colIdx,cardIdx,cards}
 let dragState=null;
 let suppressNextClick=false;
+let suppressClickTimer=null;
 
 
 
@@ -1001,10 +1067,30 @@ function consumeSuppressClick(){
   return true;
 }
 
+function suppressCardClickBriefly(){
+  suppressNextClick=true;
+  clearTimeout(suppressClickTimer);
+  suppressClickTimer=setTimeout(()=>{suppressNextClick=false;},220);
+}
+
+function isTableauRunPair(upper,lower){
+  return upper&&lower&&upper.faceUp&&lower.faceUp&&
+    rankVal(lower.rank)===rankVal(upper.rank)-1&&
+    isRed(lower.suit)!==isRed(upper.suit);
+}
+
+function getTableauDragSelection(col,idx){
+  let start=idx;
+  while(start>0&&isTableauRunPair(tableau[col][start-1],tableau[col][start])) start--;
+  return {from:'tableau',colIdx:col,cardIdx:start,cards:tableau[col].slice(start)};
+}
+
 function beginCardDrag(e,sel){
   if(e.button!==undefined&&e.button!==0) return;
   if(!sel.cards||sel.cards.length===0||!sel.cards[0].faceUp) return;
   e.stopPropagation();
+  suppressNextClick=false;
+  if(dragState) cleanupDrag();
   dragState={sel,startX:e.clientX,startY:e.clientY,x:e.clientX,y:e.clientY,ghost:null,hover:null,moved:false,source:e.currentTarget,pointerId:e.pointerId};
   selectedCard=null;
   if(e.currentTarget.setPointerCapture&&e.pointerId!==undefined){
@@ -1031,10 +1117,11 @@ function handleCardDragMove(e){
   if(!dragState) return;
   const dx=e.clientX-dragState.startX;
   const dy=e.clientY-dragState.startY;
-  if(!dragState.moved&&Math.hypot(dx,dy)<3) return;
+  if(!dragState.moved&&Math.hypot(dx,dy)<1) return;
   if(!dragState.ghost){
     dragState.ghost=buildDragGhost(dragState.sel);
     dragState.moved=true;
+    if(dragState.source) dragState.source.classList.add('dragging');
   }
   e.preventDefault();
   dragState.x=e.clientX;
@@ -1051,7 +1138,7 @@ function handleCardDragEnd(e){
   const target=findDropTarget(e.clientX,e.clientY);
   cleanupDrag();
   if(!wasMoved) return;
-  suppressNextClick=true;
+  suppressCardClickBriefly();
   if(!target){toast('Drop on a column or foundation','var(--muted)');return;}
   dropDraggedSelection(sel,target);
 }
@@ -1061,6 +1148,7 @@ function cancelCardDrag(){
 }
 
 function cleanupDrag(){
+  if(dragState&&dragState.source) dragState.source.classList.remove('dragging');
   if(dragState&&dragState.ghost) dragState.ghost.remove();
   setDropHover(null);
   document.removeEventListener('pointermove',handleCardDragMove);
@@ -1132,6 +1220,10 @@ function renderStockWaste(){
     top.style.position='absolute';
 
     stockSlot.appendChild(top);
+    const stockCount=document.createElement('span');
+    stockCount.className='pile-count';
+    stockCount.textContent=String(stock.length);
+    stockSlot.appendChild(stockCount);
 
     stockSlot.onclick=drawFromStock;
 
@@ -1152,36 +1244,35 @@ function renderStockWaste(){
 
   const wasteSlot=document.createElement('div');
 
-  wasteSlot.className='pile-slot';
+  wasteSlot.className='pile-slot waste-pile';
 
   if(waste.length>0){
-
-    const top=waste[waste.length-1];
-
-    const ce=cardEl(top);
-
-    ce.style.position='absolute';
-
-    ce.onpointerdown=(e)=>beginCardDrag(e,{from:'waste',colIdx:-1,cardIdx:waste.length-1,cards:[top]});
-
-    ce.onclick=()=>{
-
-      if(consumeSuppressClick()) return;
-
-      if(!selectedCard){
-
-        if(tryAutoFoundation(top,'waste',-1,waste.length-1)) return;
-
+    const visibleWaste=waste.slice(Math.max(0,waste.length-3));
+    visibleWaste.forEach((card,idx)=>{
+      const isTop=idx===visibleWaste.length-1;
+      const ce=cardEl(card);
+      ce.style.position='absolute';
+      ce.style.left=(idx*22)+'px';
+      ce.style.zIndex=String(idx+1);
+      if(!isTop){
+        ce.classList.add('waste-shadow');
+      } else {
+        ce.onpointerdown=(e)=>beginCardDrag(e,{from:'waste',colIdx:-1,cardIdx:waste.length-1,cards:[card]});
+        ce.onclick=()=>{
+          if(consumeSuppressClick()) return;
+          if(!selectedCard){
+            if(tryAutoFoundation(card,'waste',-1,waste.length-1)) return;
+          }
+          selectCard({from:'waste',colIdx:-1,cardIdx:waste.length-1,cards:[card]});
+        };
+        if(selectedCard&&selectedCard.from==='waste') ce.classList.add('selected');
       }
-
-      selectCard({from:'waste',colIdx:-1,cardIdx:waste.length-1,cards:[top]});
-
-    };
-
-    if(selectedCard&&selectedCard.from==='waste') ce.classList.add('selected');
-
-    wasteSlot.appendChild(ce);
-
+      wasteSlot.appendChild(ce);
+    });
+    const wasteCount=document.createElement('span');
+    wasteCount.className='pile-count';
+    wasteCount.textContent=String(waste.length);
+    wasteSlot.appendChild(wasteCount);
   }
 
   el.appendChild(wasteSlot);
@@ -1281,7 +1372,7 @@ function renderTableau(){
 
         if(isSel) ce.classList.add('selected');
 
-        ce.onpointerdown=(e)=>beginCardDrag(e,{from:'tableau',colIdx:col,cardIdx:idx,cards:tableau[col].slice(idx)});
+        ce.onpointerdown=(e)=>beginCardDrag(e,getTableauDragSelection(col,idx));
 
         ce.onclick=(e)=>{e.stopPropagation();if(consumeSuppressClick()) return;handleTableauClick(col,idx);};
 
@@ -2174,11 +2265,11 @@ function renderPassport(){
 
     div.innerHTML=`
 
-      <div class="ps-aicon">${p.icon}</div>
+      <div class="ps-icon">${p.icon}</div>
 
       <div class="ps-name" style="color:${isStamped?'var(--text)':'var(--muted)'}">${p.name}</div>
 
-      ${isStampead?`<div class="ps-date" style="color:${region.color}">${stamped[p.name]}</div>`:'<div class="ps-date">locked</div>'}
+      ${isStamped?`<div class="ps-date" style="color:${region.color}">${stamped[p.name]}</div>`:'<div class="ps-date">locked</div>'}
 
     `;
 
@@ -2199,6 +2290,11 @@ function renderPassport(){
 
 // ══════════════════════════════════════════
 
+function nextDestinationAfter(dest){
+  const idx=ALL_PLACES.findIndex(p=>p.name===dest.name);
+  if(idx<0) return ALL_PLACES[0];
+  return ALL_PLACES[(idx+1)%ALL_PLACES.length];
+}
 function renderWin(){
 
   if(!currentDest) return;
@@ -2211,7 +2307,8 @@ function renderWin(){
 
   document.getElementById('win-title').textContent='Stamped!';
 
-  document.getElementById('win-sub').textContent=`You've visited ${currentDest.name}`;
+  const next=nextDestinationAfter(currentDest);
+  document.getElementById('win-sub').textContent='Congratulations, Craig. You made it through '+currentDest.name+'. You can now advance to '+next.name+'.';
 
   document.getElementById('win-moves').textContent=moveCount;
 
